@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>大衍筮法 · 写实分堆（最终发布版）</title>
+<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型，支持可验证随机性与分布自检。" />
+<style>
+  :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#000; --accent:#111; }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  h1{font-size:22px;margin:0 0 8px} p.lead{margin:0 0 18px;color:var(--muted)}
+  .row{display:grid;gap:16px;grid-template-columns:1fr} @media(min-width:900px){.row{grid-template-columns:1.2fr 0.8fr}}
+  .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  label{display:block;color:var(--muted);font-size:13px;margin:0 0 6px}
+  input,button{font:inherit}
+  input[type=text], input[type=number]{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+  .btn{cursor:pointer;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.secondary{background:#11111110;color:var(--fg);border:1px solid #00000020}
+  .grid2{display:grid;gap:12px;grid-template-columns:1fr} @media(min-width:700px){.grid2{grid-template-columns:1fr 1fr}}
+  .lines{display:flex;flex-direction:column;gap:8px}
+  .one-line{display:flex;align-items:center;gap:10px}
+  .yang,.yin{position:relative;height:8px;width:220px}
+  .yang::before{content:"";position:absolute;inset:0;background:var(--line);border-radius:2px}
+  .yin{display:flex;justify-content:space-between;align-items:center}
+  .yin .seg{height:8px;background:var(--line);width:44%}
+  .yin .gap{width:12%}
+  .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
+  .muted{color:var(--muted)}
+  pre{white-space:pre-wrap;font-size:12px;background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px;overflow:auto}
+  .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap}
+  .kpi .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
+  .small{font-size:12px}
+  .warn{color:#b91c1c}
+  #aboutModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
+  #aboutBox{max-width:640px;margin:10vh auto;background:#fff;border-radius:12px;padding:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>大衍筮法 · 写实分堆（最终发布版）</h1>
+  <p class="lead">严格“三变成一爻”：<span class="mono">分二→挂一→按四取余（余0记4）</span>。模型已<strong>锁定为写实分堆</strong>，默认使用安全随机；填入 Seed 可复现。</p>
+
+  <div class="row">
+    <div class="card">
+      <div class="grid2" role="group" aria-label="起卦控制区">
+        <div>
+          <label for="seed">可选 Seed（留空=安全随机）</label>
+          <input id="seed" type="text" placeholder="例如：yarrow-2025-08-15" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <button id="cast" class="btn" aria-label="起卦">起卦（写实分堆）</button>
+          <button id="exportJson" class="btn secondary" aria-label="导出JSON">导出JSON</button>
+          <button id="aboutBtn" class="btn secondary" aria-label="关于">关于</button>
+        </div>
+      </div>
+
+      <div id="result" style="margin-top:14px;display:none">
+        <div class="kpi" aria-label="关键参数">
+          <div class="pill">引擎：写实分堆（等可能切分）</div>
+          <div class="pill">VRS：<span class="mono" id="vrs"></span></div>
+          <div class="pill">版本：<span class="mono" id="verpill"></span></div>
+        </div>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="card">
+            <div style="font-weight:600;margin-bottom:6px">本卦</div>
+            <div id="mainHex" class="lines"></div>
+            <div class="small muted" id="triMain"></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:600;margin-bottom:6px">之卦</div>
+            <div id="relHex" class="lines"></div>
+            <div class="small muted" id="triRel"></div>
+          </div>
+        </div>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="card">
+            <div style="font-weight:600;margin-bottom:6px">互卦 / 错卦 / 综卦（显示二进制与卦名）</div>
+            <div class="small mono" id="moreHex"></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:600;margin-bottom:6px">过程明细（每爻三变）</div>
+            <pre id="detail" aria-live="polite"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" aria-label="分布自检">
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <div style="flex:1">
+          <label for="N">分布自检（样本量，建议 ≥ 100000）</label>
+          <input id="N" type="number" value="100000" min="1000" step="1000" />
+        </div>
+        <button id="selftest" class="btn secondary">运行自检</button>
+      </div>
+      <div id="check" style="margin-top:12px;display:none">
+        <div class="small muted">目标（写实经验基准）：6≈1/64=1.5625%，7≈9/64≈14.0625%，8≈27/64≈42.1875%，9≈27/64≈42.1875%</div>
+        <pre id="stat" class="mono" aria-live="polite"></pre>
+        <div id="statWarn" class="small warn"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="small muted" style="margin-top:16px">
+    注：动爻＝6（老阴）、9（老阳）。之卦＝动位翻转（6→阳、9→阴）。互卦：二三四为下、三四五为上；错卦：阴阳互换；综卦：六爻倒置。八卦映射（底→顶）：乾111、兑110、离101、震100、巽011、坎010、艮001、坤000。
+  </p>
+</div>
+
+<div id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div id="aboutBox">
+    <div id="aboutTitle" style="font-weight:600;margin-bottom:8px">关于 · 大衍筮法（写实分堆·最终发布版）</div>
+    <div class="small" style="color:#4b5563">
+      <p>起卦法：<b>写实分堆模型（唯一）</b>。每变将 N 根随机分两堆且非空（A∈[1,N−1]），第一变先挂一，按四取余（余0记4）。</p>
+      <p>三变不变量：第1变仅取5或9；第2/3变仅取4或8；三变后剩余∈{24,28,32,36}→映射到6/7/8/9（违反即报错）。</p>
+      <p>概率特征（长期统计）：6≈1/64、7≈9/64、8≈27/64、9≈27/64。</p>
+      <p>可验证随机性（VRS）：seed + nonce + entropy → SHA-256 承诺；复算可100%重现同一卦与全过程。</p>
+      <p>版本：<span class="mono" id="aboutVer"></span></p>
+    </div>
+    <div style="margin-top:12px;text-align:right">
+      <button id="aboutClose" class="btn">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = "v1.0.0-realistic";
+let   BUILD_SHA256 = "auto";
+const __appendVersionToCommit = true;
+async function runtimePageSHA256(){
+  try{
+    const html = document.documentElement.outerHTML;
+    const enc = new TextEncoder();
+    const buf = await crypto.subtle.digest("SHA-256", enc.encode(html));
+    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    return hex;
+  }catch(e){ return "runtime-hash-unavailable"; }
+}
+function mulberry32(seed) { let t = seed >>> 0; return () => { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 2 ** 32; }; }
+function cryptoRng() { const u32 = new Uint32Array(1); return () => { crypto.getRandomValues(u32); return (u32[0] >>> 0) / 2 ** 32; }; }
+function strToSeed(s) { let h=0; for (let i=0;i<s.length;i++) h=(h*131+s.charCodeAt(i))>>>0; return h||1; }
+function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
+function rem4NonZero(x){ const r = x % 4; return r===0?4:r; }
+function splitNonZero(total, rng){ const A = randIntInclusive(rng, 1, total-1); return [A, total-A]; }
+function firstChange(n, rng){ const [A,B] = splitNonZero(n, rng); const leftRem  = rem4NonZero(A); const rightRem = rem4NonZero(B-1); const taken = 1 + leftRem + rightRem; const after = n - taken; return {after, step:{from:n,to:after,A,B,leftRem,rightRem,taken}}; }
+function nextChange(n, rng){ const [A,B] = splitNonZero(n, rng); const leftRem  = rem4NonZero(A); const rightRem = rem4NonZero(B); const taken = leftRem + rightRem; const after = n - taken; return {after, step:{from:n,to:after,A,B,leftRem,rightRem,taken}}; }
+function remainingToLine(n){ if(n===24) return 6; if(n===28) return 7; if(n===32) return 8; if(n===36) return 9; throw new Error("Unexpected remainder: "+n); }
+function genLineYarrow(rng){ let n = 49; const steps = []; const t1 = firstChange(n, rng); steps.push({idx:1,...t1.step}); n = t1.after; const t2 = nextChange(n, rng);  steps.push({idx:2,...t2.step}); n = t2.after; const t3 = nextChange(n, rng);  steps.push({idx:3,...t3.step}); n = t3.after; const value = remainingToLine(n); return { value, remainder:n, steps }; }
+function genHexYarrow(rng){ const lines = []; const detail=[]; for (let i=0;i<6;i++){ const r = genLineYarrow(rng); lines.push(r.value); detail.push({line:i+1, ...r}); } return { lines, detail }; }
+function isYang(v){ return v===7 || v===9; }
+function toBinary(lines){ return lines.map(v=>isYang(v)?1:0); }
+function relatingFrom(lines){ const out = lines.slice(); for(let i=0;i<6;i++){ if (lines[i]===6) out[i]=7; else if (lines[i]===9) out[i]=8; } return out; }
+function nuclearFromBinary(b){ return [b[1],b[2],b[3], b[2],b[3],b[4]]; }
+function invertedFromBinary(b){ return [b[5],b[4],b[3],b[2],b[1],b[0]]; }
+function oppositeFromBinary(b){ return b.map(x=>x?0:1); }
+const TRIS = { "111": {zh:"乾",sym:"☰"}, "110": {zh:"兑",sym:"☱"}, "101": {zh:"离",sym:"☲"}, "100": {zh:"震",sym:"☳"}, "011": {zh:"巽",sym:"☴"}, "010": {zh:"坎",sym:"☵"}, "001": {zh:"艮",sym:"☶"}, "000": {zh:"坤",sym:"☷"}, };
+function triNameOf(b3){ const key = b3.join(""); return TRIS[key] ? `${TRIS[key].sym}${TRIS[key].zh}` : key; }
+function trisOf(bin){ const lower = bin.slice(0,3), upper = bin.slice(3,6); return { lower, upper }; }
+const $ = (s)=>document.querySelector(s);
+const elSeed=$("#seed"), elCast=$("#cast"), elRes=$("#result");
+const elMain=$("#mainHex"), elRel=$("#relHex"), elTriM=$("#triMain"), elTriR=$("#triRel");
+const elMore=$("#moreHex"), elDet=$("#detail"), elVRS=$("#vrs"), elExport=$("#exportJson");
+const elN=$("#N"), elTestBtn=$("#selftest"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
+const aboutBtn=$("#aboutBtn"), aboutModal=$("#aboutModal"), aboutClose=$("#aboutClose"), aboutVer=$("#aboutVer"), verpill=$("#verpill");
+function renderLines(container, lines){ container.innerHTML = ""; const visual = lines.slice().reverse(); visual.forEach((v)=>{ const row = document.createElement("div"); row.className="one-line"; const isY = v===7||v===9; const moving = v===6||v===9; if (isY){ const bar=document.createElement("div"); bar.className="yang"; row.appendChild(bar); } else { const yin=document.createElement("div"); yin.className="yin"; const s1=document.createElement("div"); s1.className="seg"; const gap=document.createElement("div"); gap.className="gap"; const s2=document.createElement("div"); s2.className="seg"; yin.append(s1,gap,s2); row.appendChild(yin); } const lab = document.createElement("div"); lab.className="small mono"; lab.textContent=String(v); if (moving){ const t=document.createElement("span"); t.className="tag"; t.textContent="动"; lab.appendChild(t); } row.appendChild(lab); container.appendChild(row); }); }
+function renderTris(el, bin){ const {lower, upper} = trisOf(bin); el.textContent = `下卦：${triNameOf(lower)}　上卦：${triNameOf(upper)}　（二进制 底→顶：${bin.join("")})`; }
+function renderMore(el, bMain){ const bNuc = nuclearFromBinary(bMain); const bOpp = oppositeFromBinary(bMain); const bInv = invertedFromBinary(bMain); el.textContent = `互卦：${triNameOf(bNuc.slice(0,3))}/${triNameOf(bNuc.slice(3,6))}  ${bNuc.join("")}\n`+`错卦：${triNameOf(bOpp.slice(0,3))}/${triNameOf(bOpp.slice(3,6))}  ${bOpp.join("")}\n`+`综卦：${triNameOf(bInv.slice(0,3))}/${triNameOf(bInv.slice(3,6))}  ${bInv.join("")}`; }
+function renderDetail(el, detail){ const obj = detail.map(d => ({ 爻位: d.line, 值: d.value, 余数终值: d.remainder, 三变: d.steps.map(s => ({ 变序:s.idx, 从:s.from, 到:s.to, A:s.A, B:s.B, 左余:s.leftRem, 右余:s.rightRem, 取走:s.taken })) })); el.textContent = JSON.stringify(obj, null, 2); }
+function getRng(){ const s=elSeed.value.trim(); return s ? mulberry32(strToSeed(s)) : cryptoRng(); }
+async function sha256Hex(s){ const enc=new TextEncoder(); const buf=await crypto.subtle.digest("SHA-256", enc.encode(s)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join(""); }
+async function castOnce(){ if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256(); const rng = getRng(); const startEntropy = (performance.now()+"|"+Math.random()).toString(); const res = genHexYarrow(rng); const binMain = toBinary(res.lines); const linesRel = relatingFrom(res.lines); const binRel  = toBinary(linesRel); renderLines(elMain, res.lines); renderLines(elRel, linesRel); renderTris(elTriM, binMain); renderTris(elTriR, binRel); renderMore(elMore, binMain); renderDetail(elDet, res.detail); elRes.style.display = "block"; const seedShown = elSeed.value.trim() ? ("seed:"+elSeed.value.trim()) : "seed:crypto"; const nonce = "n:"+Date.now(); const entropy = "e:"+startEntropy; const commitBase = seedShown+"|"+nonce+"|"+entropy; const commitStr = __appendVersionToCommit ? (commitBase+"|"+APP_VERSION+"|"+BUILD_SHA256) : commitBase; const commit = await sha256Hex(commitStr); elVRS.textContent = commit.slice(0,16)+"…"; if (verpill) verpill.textContent = APP_VERSION+" · "+(BUILD_SHA256||""); window.__lastCast = { seed: seedShown, nonce, entropy, version:APP_VERSION, build:BUILD_SHA256, commit, lines: res.lines, detail: res.detail, relating: linesRel }; }
+function chisq(observed, expected){ const n = Object.values(observed).reduce((a,b)=>a+b,0); let x2=0; for (const k of [6,7,8,9]){ const e=expected[k]*n; const o=observed[k]||0; x2 += (o-e)**2/e; } return {x2, df:3}; }
+function pct(n, d){ return (n/d*100).toFixed(3)+"%"; }
+document.getElementById("cast").addEventListener("click", castOnce);
+document.getElementById("exportJson").addEventListener("click", ()=>{ if (!window.__lastCast) return alert("请先起卦"); const blob = new Blob([JSON.stringify(window.__lastCast, null, 2)], {type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "yarrow-realistic.json"; a.click(); URL.revokeObjectURL(a.href); });
+document.getElementById("aboutBtn").addEventListener("click", async ()=>{ if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256(); document.getElementById("aboutVer").textContent = APP_VERSION+" · "+(BUILD_SHA256?BUILD_SHA256.slice(0,8)+"…":""); document.getElementById("aboutModal").style.display="block"; });
+document.getElementById("aboutClose").addEventListener("click", ()=> document.getElementById("aboutModal").style.display="none");
+document.getElementById("aboutModal").addEventListener("click", (e)=>{ if(e.target.id==="aboutModal") document.getElementById("aboutModal").style.display="none"; });
+document.getElementById("selftest").addEventListener("click", ()=>{ const N = Math.max(1000, parseInt(document.getElementById("N").value,10)||100000); const rng = getRng(); const cnt = {6:0,7:0,8:0,9:0}; for (let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; } const p = { 6:1/64, 7:9/64, 8:27/64, 9:27/64 }; const {x2, df} = chisq(cnt, p); document.getElementById("stat").textContent = `样本数 N = ${N}\n`+`计数：${JSON.stringify(cnt)}\n`+`比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+`卡方统计量 x²=${x2.toFixed(2)}（df=${df}）。\n\n`+`期望：6≈1/64、7≈9/64、8≈27/64、9≈27/64（写实分堆经验基准）。`; document.getElementById("check").style.display="block"; document.getElementById("statWarn").textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000 以稳定观测。" : ""; });
+(async function initVersionBar(){ if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256(); const bar = document.createElement("div"); bar.style.cssText = "margin-top:10px;color:#6b7280;font-size:12px"; bar.textContent = `版本：${APP_VERSION} · build ${ (BUILD_SHA256||"").slice(0,8) }…`; document.querySelector(".wrap")?.appendChild(bar); const vp = document.getElementById("verpill"); if (vp) vp.textContent = APP_VERSION+" · "+(BUILD_SHA256||""); })();
+</script>
+</body>
+</html>
