@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（交互起卦·无撤销·含自检）</title>
-<meta name="description" content="严格还原：每一爻点击三次“分堆”（分二→挂一→按四取余，余0记4），六爻成卦；强随机（crypto）；显示64卦卦名；无种子、无导出、无撤销；附独立分布自检。" />
+<title>大衍筮法 · 写实分堆（交互起卦·无撤销·自检·指南按钮）</title>
+<meta name="description" content="严格还原：每一爻点击三次“分堆”（分二→挂一→按四取余，余0记4），六爻成卦；强随机（crypto）；显示64卦卦名；无种子、无导出、无撤销；附独立分布自检；‘指南’为独立小按钮。">
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309; }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
@@ -14,8 +14,10 @@
   .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
   .btn{cursor:pointer;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px}
   .btn.secondary{background:#11111110;color:var(--fg);border:1px solid #00000020}
+  .btn.ghost{background:transparent;border:1px dashed #00000030;color:var(--fg)}
+  .btn.small{padding:6px 10px;font-size:13px;border-radius:8px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .muted{color:var(--muted)} .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace}
+  .muted{color:var(--muted)} .small{font-size:12px} .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace}
   .grid2{display:grid;gap:12px;grid-template-columns:1fr} @media(min-width:700px){.grid2{grid-template-columns:1fr 1fr}}
   .kpi{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
   .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
@@ -28,15 +30,20 @@
   .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
   .ok{color:var(--ok)} .warn{color:#b45309}
   pre{white-space:pre-wrap;font-size:12px;background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px;overflow:auto}
+  /* Modal */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
+  .modal > .box{max-width:680px;margin:8vh auto;background:#fff;border-radius:12px;padding:16px;outline:none}
+  .modal .title{font-weight:600;margin-bottom:6px}
   @media (prefers-color-scheme: dark){
     :root{ --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb; }
-    .btn.secondary{ background:#ffffff10; border-color:#ffffff20; color:var(--fg); }
+    .btn.secondary,.btn.ghost{ background:#ffffff10; border-color:#ffffff30; color:var(--fg); }
+    .modal > .box{ background:#111; color:var(--fg); }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>大衍筮法 · 写实分堆（交互起卦·无撤销·含自检）</h1>
+  <h1>大衍筮法 · 写实分堆（交互起卦·无撤销·自检·指南按钮）</h1>
   <p class="lead">每一爻需 <span class="mono">3 次变</span>：第1变先“挂一”，每变“分二且非空”，按四取余（余0记4）。点击三次得一爻，六爻成卦。</p>
 
   <div class="row">
@@ -49,25 +56,13 @@
         <div class="pill">版本：<span class="mono" id="verpill">—</span></div>
       </div>
 
-      <!-- 指导说明 -->
-      <div class="card" style="margin-bottom:10px">
-        <div style="font-weight:600;margin-bottom:6px">指导说明</div>
-        <ol class="small" style="margin:0 0 6px 18px; padding:0; line-height:1.6">
-          <li>点击<b>开始一卦</b>。</li>
-          <li>每一爻需<b>三次</b>点击<b>分堆一次（下一变）</b>：第1变会先<b>挂一</b>，每变都按四取余（余0记4）。</li>
-          <li>三变完成即得到该爻（6/7/8/9）。随后点击<b>开始下一爻</b>，直到凑满六爻。</li>
-          <li>本版<b>不支持撤销</b>；若需重来，请点<b>重开</b>。</li>
-          <li>完成六爻后，右侧显示本卦/之卦/互卦/错卦/综卦及对应的<b>64卦卦名</b>。</li>
-          <li>采用<b>强随机</b>；不提供种子、导出、复制。底部提供<b>独立分布自检</b>，便于验证长期统计。</li>
-        </ol>
-        <div class="small muted">提示：下方“当前爻”区域会实时展示每一步的 A/B 分堆、取余与剩余。</div>
-      </div>
-
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px" role="group" aria-label="交互控制">
         <button class="btn" id="startHex">开始一卦</button>
         <button class="btn" id="splitOnce" disabled>分堆一次（下一变）</button>
         <button class="btn secondary" id="nextLine" disabled>开始下一爻</button>
         <button class="btn secondary" id="resetAll">重开</button>
+        <span style="flex:1"></span>
+        <button class="btn ghost small" id="guideBtn" aria-haspopup="dialog" aria-controls="guideModal" title="查看流程指南">指南</button>
       </div>
 
       <div id="status" class="muted small">未开始。</div>
@@ -130,9 +125,27 @@
   </p>
 </div>
 
+<!-- 指南模态 -->
+<div class="modal" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+  <div class="box" tabindex="-1">
+    <div id="guideTitle" class="title">起卦流程指南</div>
+    <ol class="small" style="margin:0 0 6px 18px; padding:0; line-height:1.7">
+      <li>点击<b>开始一卦</b>。</li>
+      <li>每一爻需<b>三次</b>点击<b>分堆一次（下一变）</b>：第1变会先<b>挂一</b>，每变都按四取余（余0记4）。</li>
+      <li>三变完成得到该爻（6/7/8/9）。点击<b>开始下一爻</b>，直到凑满六爻。</li>
+      <li>本版<b>不支持撤销</b>；若需重来，点<b>重开</b>。</li>
+      <li>完成六爻后，右侧显示本卦/之卦/互卦/错卦/综卦与对应的<b>64卦卦名</b>。</li>
+      <li>采用<b>强随机</b>；不提供种子、导出、复制。底部提供<b>分布自检</b>验证长期统计。</li>
+    </ol>
+    <div style="text-align:right;margin-top:10px">
+      <button class="btn small" id="guideClose">知道了</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.3.0-interactive-noundo-selftest";
+const APP_VERSION = "v3.4.0-interactive-noundo-selftest-guidebtn";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -176,7 +189,9 @@ function remainingToLine(n){
   if(n===36) return 9;
   throw new Error("Unexpected remainder: "+n);
 }
-function genOneStep(n, idx, rng){ return (idx===1) ? firstChange(n, rng) : nextChange(n, rng); }
+function genOneStep(n, idx, rng){
+  return (idx===1) ? firstChange(n, rng) : nextChange(n, rng);
+}
 function genLineYarrow(rng){
   let n=49; const t1=firstChange(n,rng); n=t1.after;
   const t2=nextChange(n,rng); n=t2.after;
@@ -236,6 +251,7 @@ const elMain=$("#mainHex"), elRel=$("#relHex"), elTriM=$("#triMain"), elTriR=$("
 const elLabelMain=$("#labelMain"), elLabelRel=$("#labelRel");
 const elVRS=$("#vrs"), verpill=$("#verpill");
 const elN=$("#N"), elSelf=$("#selftest"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
+const guideBtn=$("#guideBtn"), guideModal=$("#guideModal"), guideClose=$("#guideClose");
 
 /* ========= 渲染 ========= */
 function renderOneLineVisual(v){
@@ -256,7 +272,8 @@ function renderLines(container, lines){
 function renderBuilt(lines){
   elBuilt.innerHTML="";
   if(!lines.length){ elBuiltText.textContent="尚无成爻。"; return; }
-  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v))); // 从下到上
+  // 从下到上（不倒序）
+  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
   elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下到上：${lines.join(", ")}）`;
 }
 function renderTris(el, bin){
@@ -402,6 +419,14 @@ document.getElementById("selftest").addEventListener("click", ()=>{
   elCheck.style.display="block";
   elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000。" : "";
 });
+
+/* ========= 指南模态交互 ========= */
+function openGuide(){ guideModal.style.display="block"; setTimeout(()=>guideModal.querySelector(".box").focus(),0); }
+function closeGuide(){ guideModal.style.display="none"; guideBtn?.focus(); }
+guideBtn.addEventListener("click", openGuide);
+guideClose.addEventListener("click", closeGuide);
+guideModal.addEventListener("click", (e)=>{ if(e.target===guideModal) closeGuide(); });
+document.addEventListener("keydown",(e)=>{ if(guideModal.style.display==="block" && e.key==="Escape") closeGuide(); });
 
 /* ========= 事件 ========= */
 elStart.addEventListener("click", ()=>{ startHex(); });
