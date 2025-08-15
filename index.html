@@ -6,11 +6,17 @@
 <title>大衍筮法 · 写实分堆（交互·自检·指南/解卦·自下而上）</title>
 <meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；无种子、无导出、无撤销；含独立分布自检与‘指南/解卦方式（朱熹）’按钮；‘已成爻’自下而上显示。">
 <style>
-  :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309; }
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
+  :root{
+    --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309;
+    /* code block (light) */
+    --code-bg:#f7f7f7; --code-fg:#111; --code-border:#e5e7eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
   .wrap{max-width:1100px;margin:0 auto;padding:24px}
   h1{font-size:22px;margin:0 0 8px} p.lead{margin:0 0 18px;color:var(--muted)}
-  .row{display:grid;gap:16px;grid-template-columns:1fr} @media(min-width:980px){.row{grid-template-columns:1.2fr 0.8fr}}
+  .row{display:grid;gap:16px;grid-template-columns:1fr}
+  @media(min-width:980px){.row{grid-template-columns:1.2fr 0.8fr}}
   .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
   .btn{cursor:pointer;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px}
   .btn.secondary{background:#11111110;color:var(--fg);border:1px solid #00000020}
@@ -18,13 +24,13 @@
   .btn.small{padding:6px 10px;font-size:13px;border-radius:8px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .muted{color:var(--muted)} .small{font-size:12px} .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace}
-  .grid2{display:grid;gap:12px;grid-template-columns:1fr} @media(min-width:700px){.grid2{grid-template-columns:1fr 1fr}}
+  .grid2{display:grid;gap:12px;grid-template-columns:1fr}
+  @media(min-width:700px){.grid2{grid-template-columns:1fr 1fr}}
   .kpi{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
   .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
 
   .lines{display:flex;flex-direction:column;gap:8px}
-  /* 让“已成爻”容器自下而上堆叠 */
-  .lines.bottom-up{flex-direction:column-reverse}
+  .lines.bottom-up{flex-direction:column-reverse} /* 已成爻自下而上 */
 
   .one-line{display:flex;align-items:center;gap:10px}
   .yang,.yin{position:relative;height:8px;width:220px}
@@ -33,9 +39,23 @@
   .yin .seg{height:8px;background:var(--line);width:44%} .yin .gap{width:12%}
   .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
   .ok{color:var(--ok)} .warn{color:#b45309}
-  pre{white-space:pre-wrap;font-size:12px;background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px;overflow:auto}
 
-  /* 链接芯片 */
+  /* code block：按主题自动换色（修复暗色对比度） */
+  pre{
+    white-space:pre-wrap;
+    font-size:12px;
+    font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    background:var(--code-bg);
+    color:var(--code-fg);
+    border:1px solid var(--code-border);
+    border-radius:10px;
+    padding:10px;
+    overflow:auto;
+    line-height:1.6;
+    max-height:44vh;
+  }
+
+  /* 外部链接芯片 */
   a.linkchip{display:inline-block;margin:6px 6px 0 0;padding:5px 9px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111;text-decoration:none;font-size:12px}
   a.linkchip:hover{box-shadow:0 1px 0 rgba(0,0,0,.08)}
 
@@ -47,15 +67,19 @@
   .caps{font-variant-caps: all-small-caps; letter-spacing:.5px}
 
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb; }
+    :root{
+      --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb;
+      /* code block (dark) */
+      --code-bg:#0f0f0f; --code-fg:#e5e7eb; --code-border:#222;
+    }
     .card{ border-color:#222 }
-    .btn{ background:var(--accent); color:#111; }                 /* ★ 修复：暗色下主按钮改深字色 */
+    .btn{ background:var(--accent); color:#111; }                        /* 主按钮：浅底深字 */
     .btn.secondary,.btn.ghost{ background:#ffffff10; border-color:#ffffff30; color:var(--fg); }
-    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); } /* ★ 修复：胶囊反转为深底浅字 */
+    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); }  /* 胶囊：深底浅字 */
     input,select,textarea{ background:#0f0f0f; color:var(--fg); border:1px solid #2a2a2a; border-radius:10px; padding:8px 10px; }
     .modal > .box{ background:#111; color:var(--fg); }
     .hr{ background:#222 }
-    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; } /* ★ 链接芯片暗色可读 */
+    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; } /* 链接芯片暗色可读 */
   }
 </style>
 </head>
@@ -105,14 +129,14 @@
       <div style="font-weight:600;margin-bottom:6px" id="labelMain">本卦</div>
       <div id="mainHex" class="lines"></div>
       <div class="small muted" id="triMain"></div>
-      <div id="linksMain" class="small" aria-label="外部资源链接（本卦）"></div><!-- ★ 新增：本卦资源链接 -->
+      <div id="linksMain" class="small" aria-label="外部资源链接（本卦）"></div>
 
       <div style="height:12px"></div>
 
       <div style="font-weight:600;margin-bottom:6px" id="labelRel">之卦</div>
       <div id="relHex" class="lines"></div>
       <div class="small muted" id="triRel"></div>
-      <div id="linksRel" class="small" aria-label="外部资源链接（之卦）"></div><!-- ★ 新增：之卦资源链接 -->
+      <div id="linksRel" class="small" aria-label="外部资源链接（之卦）"></div>
 
       <div style="height:12px"></div>
 
@@ -191,7 +215,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.9.0-darkfix-links";
+const APP_VERSION = "v3.9.1-darkfix-pre+links+zhuxi";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -207,7 +231,6 @@ function cryptoNonceHex(bytes=16){ const u=new Uint8Array(bytes); crypto.getRand
 /* ========= 强随机 RNG ========= */
 function cryptoRng(){ const u32=new Uint32Array(1); return ()=>{ crypto.getRandomValues(u32); return (u32[0]>>>0)/2**32; }; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
-// 自检用快速 PRNG（种子来自 crypto，仅内部使用）
 function mulberry32(seed){ let t=seed>>>0; return ()=>{ t+=0x6D2B79F5; let r=Math.imul(t^(t>>>15),1|t); r^=r+Math.imul(r^(r>>>7),61|r); return((r^(r>>>14))>>>0)/2**32; }; }
 function newSeed32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
 
@@ -263,7 +286,7 @@ const HEX64 = {
 "111111":{no:1,zh:"乾",full:"乾为天"},"000000":{no:2,zh:"坤",full:"坤为地"},"100010":{no:3,zh:"屯",full:"水雷屯"},
 "010001":{no:4,zh:"蒙",full:"山水蒙"},"111010":{no:5,zh:"需",full:"水天需"},"010111":{no:6,zh:"讼",full:"天水讼"},
 "010000":{no:7,zh:"师",full:"地水师"},"000010":{no:8,zh:"比",full:"水地比"},"111011":{no:9,zh:"小畜",full:"风天小畜"},
-"110111":{no:10,zh:"履",full:"天泽履"},"111000":{no:11,zh:"泰",full:"地天泰"},"000111":{no:12,zh:"否",full:"天地否"},
+"110111":{no:10,zh:"履",full:"天泽履"},"111000":{no:11,zh:"泰",full:"地天泰"},"000111":{no:12,zh:"天地否"},
 "101111":{no:13,zh:"同人",full:"天火同人"},"111101":{no:14,zh:"大有",full:"火天大有"},"001000":{no:15,zh:"谦",full:"地山谦"},
 "000100":{no:16,zh:"豫",full:"雷地豫"},"100110":{no:17,zh:"随",full:"泽雷随"},"011001":{no:18,zh:"蛊",full:"山风蛊"},
 "110000":{no:19,zh:"临",full:"地泽临"},"000011":{no:20,zh:"观",full:"风地观"},"100101":{no:21,zh:"噬嗑",full:"火雷噬嗑"},
@@ -319,7 +342,7 @@ function renderLines(container, lines){
 function renderBuilt(lines){
   elBuilt.innerHTML="";
   if(!lines.length){ elBuiltText.textContent="尚无成爻。"; return; }
-  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v))); // 底→顶；容器 column-reverse 自下而上堆叠
+  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
   elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下到上：${lines.join(", ")}）`;
 }
 function renderTris(el, bin){
@@ -369,7 +392,7 @@ function buildLinks(targetEl, binArr, linesForYao){
     linesForYao.forEach((v,i)=>{
       if(isMoving(v)){
         const yao = (v===9) ? "九" : "六";
-        const pos = CN_POS[i]; // i:0..5
+        const pos = CN_POS[i]; // i:0..5（底→顶）
         const qq = encodeURIComponent(`周易 ${name} ${yao}${pos} 爻辞`);
         const a=document.createElement("a");
         a.className="linkchip"; a.href=`https://www.bing.com/search?q=${qq}`;
@@ -403,7 +426,7 @@ function resetAll(){
   elCurrDetail.textContent = "";
   elMain.innerHTML = elRel.innerHTML = elMore.textContent = "";
   elTriM.textContent = elTriR.textContent = "";
-  linksMain.innerHTML = linksRel.innerHTML = "";            // ★ 清空外部链接
+  linksMain.innerHTML = linksRel.innerHTML = "";            // 清空外部链接
   elLabelMain.textContent="本卦"; elLabelRel.textContent="之卦";
   methodBtn.disabled = true;
   renderBuilt(state.lines);
@@ -483,7 +506,7 @@ async function finishHex(){
   if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
-  // ★ 构建外部链接（搜索）
+  // 构建外部链接（搜索）
   buildLinks(linksMain, binMain, state.lines);
   buildLinks(linksRel, binRel, state.lines);
 
