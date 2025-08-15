@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（交互·自检·指南/解卦·自下而上显示）</title>
-<meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；无种子、无导出、无撤销；含独立分布自检与‘指南/解卦方式（朱熹）’按钮；‘已成爻’自下而上显示。">
+<title>大衍筮法 · 写实分堆（交互·自检·指南/解卦·自下而上·精简版）</title>
+<meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；无种子、无导出、无撤销；含独立分布自检与‘指南/解卦方式（朱熹）’按钮；‘已成爻’自下而上显示；去冗精简。">
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309; }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
@@ -85,7 +85,6 @@
         </div>
         <div class="card">
           <div style="font-weight:600;margin-bottom:6px">已成爻（从下而上实时堆叠）</div>
-          <!-- 关键：加 bottom-up 类 -->
           <div id="builtLines" class="lines bottom-up"></div>
           <div class="small muted" id="builtText"></div>
         </div>
@@ -176,7 +175,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.6.0-interactive-bottomup";
+const APP_VERSION = "v3.6.1-interactive-bottomup-clean";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -280,7 +279,7 @@ const elBuilt=$("#builtLines"), elBuiltText=$("#builtText");
 const elMain=$("#mainHex"), elRel=$("#relHex"), elTriM=$("#triMain"), elTriR=$("#triRel"), elMore=$("#moreHex");
 const elLabelMain=$("#labelMain"), elLabelRel=$("#labelRel");
 const elVRS=$("#vrs"), verpill=$("#verpill");
-const elN=$("#N"), elSelf=$("#selftest"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
+const elN=$("#N"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
 const guideBtn=$("#guideBtn"), guideModal=$("#guideModal"), guideClose=$("#guideClose");
 const methodBtn=$("#methodBtn"), methodModal=$("#methodModal"), methodClose=$("#methodClose"), methodSummary=$("#methodSummary");
 
@@ -303,8 +302,7 @@ function renderLines(container, lines){
 function renderBuilt(lines){
   elBuilt.innerHTML="";
   if(!lines.length){ elBuiltText.textContent="尚无成爻。"; return; }
-  // 保持底→顶顺序，由于容器 column-reverse，会自下而上堆叠
-  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
+  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v))); // 底→顶；容器 column-reverse 自下而上堆叠
   elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下到上：${lines.join(", ")}）`;
 }
 function renderTris(el, bin){
@@ -438,14 +436,13 @@ async function finishHex(){
 function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
 document.getElementById("selftest").addEventListener("click", ()=>{
   const N = Math.max(1000, parseInt(elN.value,10)||100000);
-  // 快速 PRNG，种子来自 crypto（不可复现，但速度好）
-  const rng = mulberry32(newSeed32());
+  const rng = mulberry32(newSeed32()); // 速度优先；种子源自 crypto
   const cnt = {6:0,7:0,8:0,9:0};
   for(let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
   elStat.textContent =
     `样本数 N = ${N}\n`+
     `计数：${JSON.stringify(cnt)}\n`+
-    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
+    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct[cnt[9],N]}}\n`.replace("undefined","") + // 防止极端情况下字符串替换错误
     `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
   const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
   elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
@@ -463,7 +460,6 @@ document.addEventListener("keydown",(e)=>{ if(guideModal.style.display==="block"
 
 /* ========= 解卦方式（朱熹） ========= */
 function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; } // 1..6（底→顶）
-function isAllMoving(lines){ return lines.every(v=>isMoving(v)); }
 function isAllYang(lines){ return lines.every(v=> (v===7||v===9) ); }
 function isAllYin(lines){ return lines.every(v=> (v===6||v===8) ); }
 
@@ -571,17 +567,8 @@ elReset.addEventListener("click", ()=> resetAll());
 /* ========= 初始化 ========= */
 (async function init(){
   await computeBuildHashOnce();
-  if (verpill) verpill.textContent = APP_VERSION+" · "+(BUILD_SHA256||"").slice(0,8)+"…";
+  verpill.textContent = APP_VERSION+" · "+(BUILD_SHA256||"").slice(0,8)+"…";
   resetAll();
-
-  // 指南模态
-  function openGuide(){ guideModal.style.display="block"; setTimeout(()=>guideModal.querySelector(".box").focus(),0); }
-  function closeGuide(){ guideModal.style.display="none"; guideBtn?.focus(); }
-  window.openGuide = openGuide; window.closeGuide = closeGuide;
-  guideBtn.addEventListener("click", openGuide);
-  guideClose.addEventListener("click", closeGuide);
-  guideModal.addEventListener("click", (e)=>{ if(e.target===guideModal) closeGuide(); });
-  document.addEventListener("keydown",(e)=>{ if(guideModal.style.display==="block" && e.key==="Escape") closeGuide(); });
 })();
 </script>
 </body>
