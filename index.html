@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>大衍筮法 · 写实分堆（最终发布版）</title>
-<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型，强调真实与可审计；支持可验证随机性与分布自检（趋势）。" />
+<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型，强调真实与可审计；支持可验证随机性与分布自检（趋势+经验基准）。" />
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#000; --accent:#111; }
   *{box-sizing:border-box}
@@ -106,7 +106,8 @@
       </div>
       <div id="check" style="margin-top:12px;display:none">
         <div class="small muted">
-          参考趋势（写实等可能分堆，长期模拟）：整体呈 <b>9 ≥ 8 ≫ 7 > 6</b>。样本越大越稳定。此处统计仅作随机性健康检查，不用于判定算法对错。
+          参考趋势（写实等可能分堆，长期模拟）：整体呈 <b>9 ≥ 8 ≫ 7 > 6</b>；<br/>
+          经验基准（长期模拟、非校准）：<span class="mono">6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</span>。样本越大越稳定。此处统计仅作随机性健康检查，不用于判定算法对错。
         </div>
         <pre id="stat" class="mono" aria-live="polite"></pre>
         <div id="statWarn" class="small warn"></div>
@@ -126,7 +127,7 @@
     <div class="small" style="color:#4b5563">
       <p>起卦法：<b>写实分堆模型（唯一）</b>。每变将 N 根随机分两堆且非空（A∈[1,N−1]），第一变先挂一，按四取余（余0记4）。</p>
       <p>三变不变量：第1变仅取5或9；第2/3变仅取4或8；三变后剩余∈{24,28,32,36}→映射到6/7/8/9（违反即报错）。</p>
-      <p>概率特征（长期统计）：在写实等可能分堆下，整体呈 <b>9≥8≫7>6</b> 的趋势；样本越大越稳定（具体数值随样本与种子而轻微波动）。</p>
+      <p>概率特征（长期统计，A 等可能写实）：长期模拟经验基准约为 <b>6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</b>；不同种子/样本会有轻微波动；<u>本应用不以此作校准，仅作参考</u>。</p>
       <p>可验证随机性（VRS）：seed32（来自用户 Seed 或自动生成）+ nonce + entropy → SHA-256 承诺；导出文件包含所有要素，可100%重现同一卦与全过程。</p>
       <p>版本：<span class="mono" id="aboutVer"></span></p>
     </div>
@@ -138,7 +139,7 @@
 
 <script>
 /* ========= 版本与构建哈希（运行时自动生成） ========= */
-const APP_VERSION = "v1.1.0-realistic"; // 升级：可复现性强化 + 自检趋势化
+const APP_VERSION = "v1.1.1-realistic"; // 真实写实 + VRS + 经验基准说明
 let   BUILD_SHA256 = "auto"; // 若为 "auto" 则运行时计算
 
 const __appendVersionToCommit = true; // 将版本/哈希写入承诺串，便于审计
@@ -165,21 +166,21 @@ function mulberry32(seed) {
 function strToSeed(s) { let h=0; for (let i=0;i<s.length;i++) h=(h*131+s.charCodeAt(i))>>>0; return h||1; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
 
-// ★ 新增：自动生成会话 seed32（空 Seed 时使用）
+// 自动生成会话 seed32（空 Seed 时使用）
 function newSessionSeed32(){
   const u32 = new Uint32Array(1);
   crypto.getRandomValues(u32);
   const v = (u32[0] >>> 0) || 1;
   return v;
 }
-// ★ 新增：根据输入框得到 seed32 与标签
+// 根据输入框得到 seed32 与标签
 function getSeed32AndLabel(){
   const s = elSeed.value.trim();
   if (s) return { seed32: strToSeed(s), label: "user:"+s };
   const v = newSessionSeed32();
   return { seed32: v, label: "auto:"+v };
 }
-// ★ 新增：由 seed32 构造 RNG
+// 由 seed32 构造 RNG
 function getRngFromSeed32(seed32){
   return mulberry32((seed32 >>> 0) || 1);
 }
@@ -345,7 +346,7 @@ async function castOnce(){
   };
 }
 
-/* ========= 自检（趋势化，不做数值“校准”） ========= */
+/* ========= 自检（趋势化 + 经验基准，仅参考） ========= */
 function pct(n, d){ return (n/d*100).toFixed(3)+"%"; }
 
 $("#selftest").addEventListener("click", ()=>{
@@ -361,7 +362,8 @@ $("#selftest").addEventListener("click", ()=>{
   elStat.textContent =
     `样本数 N = ${N}\n`+
     `计数：${JSON.stringify(cnt)}\n`+
-    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}`;
+    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
+    `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}（A 等可能长期模拟）`;
 
   // 经验性趋势提示（不作校准判定）
   const trendOK = (cnt[9] >= cnt[8]) && (cnt[8] > cnt[7]) && (cnt[7] > cnt[6]);
