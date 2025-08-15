@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（交互·自检·指南/解卦·自下而上·精简版）</title>
-<meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；无种子、无导出、无撤销；含独立分布自检与‘指南/解卦方式（朱熹）’按钮；‘已成爻’自下而上显示；去冗精简。">
+<title>大衍筮法 · 写实分堆（交互·自检·指南/解卦·自下而上）</title>
+<meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；无种子、无导出、无撤销；含独立分布自检与‘指南/解卦方式（朱熹）’按钮；‘已成爻’自下而上显示。">
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309; }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
@@ -23,7 +23,7 @@
   .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
 
   .lines{display:flex;flex-direction:column;gap:8px}
-  /* 关键：让“已成爻”容器自下而上堆叠 */
+  /* 让“已成爻”容器自下而上堆叠 */
   .lines.bottom-up{flex-direction:column-reverse}
 
   .one-line{display:flex;align-items:center;gap:10px}
@@ -175,7 +175,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.6.1-interactive-bottomup-clean";
+const APP_VERSION = "v3.7.0-interactive-bottomup-audit";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -377,6 +377,12 @@ function doOneSplit(){
   state.curr.stepIdx++;
 
   if (state.curr.stepIdx===4){
+    // 运行期断言：三变后 n 必须是 24/28/32/36
+    if (![24,28,32,36].includes(state.curr.n)){
+      elStatus.innerHTML = `<span class="warn">分堆异常：剩余 n=${state.curr.n}（应为 24/28/32/36）。请点击“重开”。</span>`;
+      elSplit.disabled = true; elNextLine.disabled = true;
+      return;
+    }
     // 三变完成，得到一爻
     const value = remainingToLine(state.curr.n);
     state.lines.push(value);
@@ -422,10 +428,11 @@ async function finishHex(){
 
   state.finished = true;
 
-  // VRS：对本卦全过程做承诺（仅标记，不提供复现导出）
+  // VRS：对本卦全过程做承诺（加入时间戳，不提供复现导出）
   await computeBuildHashOnce();
+  const epochMs = Date.now();
   const bodyHash = await sha256Hex(JSON.stringify({lines:state.lines, detail:state.hexDetail}));
-  const commitStr = (__appendVersionToCommit ? `${APP_VERSION}|${BUILD_SHA256}|` : "") + `nonce:${state.sessionNonce}|body:${bodyHash}`;
+  const commitStr = (__appendVersionToCommit ? `${APP_VERSION}|${BUILD_SHA256}|` : "") + `nonce:${state.sessionNonce}|t:${epochMs}|body:${bodyHash}`;
   elVRS.textContent = (await sha256Hex(commitStr)).slice(0,16)+"…";
 
   methodBtn.disabled = false; // 可打开“解卦方式”
@@ -442,7 +449,7 @@ document.getElementById("selftest").addEventListener("click", ()=>{
   elStat.textContent =
     `样本数 N = ${N}\n`+
     `计数：${JSON.stringify(cnt)}\n`+
-    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct[cnt[9],N]}}\n`.replace("undefined","") + // 防止极端情况下字符串替换错误
+    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
     `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
   const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
   elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
