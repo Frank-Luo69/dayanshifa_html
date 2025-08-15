@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（交互起卦·无撤销）</title>
-<meta name="description" content="严格还原：每一爻点击三次“分堆”（分二→挂一→按四取余，余0记4），六爻成卦；强随机（crypto）；显示64卦卦名；无种子、无导出、无撤销。" />
+<title>大衍筮法 · 写实分堆（交互起卦·无撤销·含自检）</title>
+<meta name="description" content="严格还原：每一爻点击三次“分堆”（分二→挂一→按四取余，余0记4），六爻成卦；强随机（crypto）；显示64卦卦名；无种子、无导出、无撤销；附独立分布自检。" />
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309; }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
@@ -36,7 +36,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>大衍筮法 · 写实分堆（交互起卦·无撤销）</h1>
+  <h1>大衍筮法 · 写实分堆（交互起卦·无撤销·含自检）</h1>
   <p class="lead">每一爻需 <span class="mono">3 次变</span>：第1变先“挂一”，每变“分二且非空”，按四取余（余0记4）。点击三次得一爻，六爻成卦。</p>
 
   <div class="row">
@@ -54,12 +54,11 @@
         <div style="font-weight:600;margin-bottom:6px">指导说明</div>
         <ol class="small" style="margin:0 0 6px 18px; padding:0; line-height:1.6">
           <li>点击<b>开始一卦</b>。</li>
-          <li>每一爻需<b>三次</b>点击<b>分堆一次（下一变）</b>：
-            第1变会先<b>挂一</b>，每变都按四取余（余0记4）。</li>
+          <li>每一爻需<b>三次</b>点击<b>分堆一次（下一变）</b>：第1变会先<b>挂一</b>，每变都按四取余（余0记4）。</li>
           <li>三变完成即得到该爻（6/7/8/9）。随后点击<b>开始下一爻</b>，直到凑满六爻。</li>
           <li>本版<b>不支持撤销</b>；若需重来，请点<b>重开</b>。</li>
-          <li>完成六爻后，右侧会显示：本卦/之卦/互卦/错卦/综卦与对应的<b>64卦卦名</b>。</li>
-          <li>采用<b>强随机</b>；不提供种子、导出、复制。</li>
+          <li>完成六爻后，右侧显示本卦/之卦/互卦/错卦/综卦及对应的<b>64卦卦名</b>。</li>
+          <li>采用<b>强随机</b>；不提供种子、导出、复制。底部提供<b>独立分布自检</b>，便于验证长期统计。</li>
         </ol>
         <div class="small muted">提示：下方“当前爻”区域会实时展示每一步的 A/B 分堆、取余与剩余。</div>
       </div>
@@ -106,6 +105,25 @@
     </div>
   </div>
 
+  <!-- 独立分布自检 -->
+  <div class="card" style="margin-top:16px" aria-label="分布自检">
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:1;min-width:230px">
+        <label for="N" class="small muted">分布自检（样本量，建议 ≥ 100000）</label>
+        <input id="N" type="number" value="100000" min="1000" step="1000" />
+      </div>
+      <button id="selftest" class="btn secondary">运行自检</button>
+    </div>
+    <div id="check" style="margin-top:12px;display:none">
+      <div class="small muted">
+        参考趋势（写实等可能分堆，长期模拟）：<b>9 ≥ 8 ≫ 7 > 6</b>；经验基准约
+        <span class="mono">6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</span>。仅作健康检查，不用于判定对错。
+      </div>
+      <pre id="stat" class="mono" aria-live="polite"></pre>
+      <div id="statWarn" class="small warn"></div>
+    </div>
+  </div>
+
   <p class="small muted" style="margin-top:16px">
     注：动爻＝6（老阴）、9（老阳）；之卦＝动位翻转（6→阳、9→阴）。互卦：二三四为下、三四五为上；错卦：阴阳互换；综卦：六爻倒置。
     八卦映射（底→顶）：乾111、兑110、离101、震100、巽011、坎010、艮001、坤000。
@@ -114,7 +132,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.2.0-interactive-noundo";
+const APP_VERSION = "v3.3.0-interactive-noundo-selftest";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -130,6 +148,9 @@ function cryptoNonceHex(bytes=16){ const u=new Uint8Array(bytes); crypto.getRand
 /* ========= 强随机 RNG ========= */
 function cryptoRng(){ const u32=new Uint32Array(1); return ()=>{ crypto.getRandomValues(u32); return (u32[0]>>>0)/2**32; }; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
+// 自检用快速 PRNG（种子来自 crypto，仅内部使用）
+function mulberry32(seed){ let t=seed>>>0; return ()=>{ t+=0x6D2B79F5; let r=Math.imul(t^(t>>>15),1|t); r^=r+Math.imul(r^(r>>>7),61|r); return((r^(r>>>14))>>>0)/2**32; }; }
+function newSeed32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
 
 /* ========= 写实分堆（严格三变） ========= */
 function rem4NonZero(x){ const r=x%4; return r===0?4:r; }
@@ -155,8 +176,12 @@ function remainingToLine(n){
   if(n===36) return 9;
   throw new Error("Unexpected remainder: "+n);
 }
-function genOneStep(n, idx, rng){
-  return (idx===1) ? firstChange(n, rng) : nextChange(n, rng);
+function genOneStep(n, idx, rng){ return (idx===1) ? firstChange(n, rng) : nextChange(n, rng); }
+function genLineYarrow(rng){
+  let n=49; const t1=firstChange(n,rng); n=t1.after;
+  const t2=nextChange(n,rng); n=t2.after;
+  const t3=nextChange(n,rng); n=t3.after;
+  return { value:remainingToLine(n) };
 }
 
 /* ========= 卦运算 & 名称 ========= */
@@ -210,6 +235,7 @@ const elBuilt=$("#builtLines"), elBuiltText=$("#builtText");
 const elMain=$("#mainHex"), elRel=$("#relHex"), elTriM=$("#triMain"), elTriR=$("#triRel"), elMore=$("#moreHex");
 const elLabelMain=$("#labelMain"), elLabelRel=$("#labelRel");
 const elVRS=$("#vrs"), verpill=$("#verpill");
+const elN=$("#N"), elSelf=$("#selftest"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
 
 /* ========= 渲染 ========= */
 function renderOneLineVisual(v){
@@ -230,8 +256,7 @@ function renderLines(container, lines){
 function renderBuilt(lines){
   elBuilt.innerHTML="";
   if(!lines.length){ elBuiltText.textContent="尚无成爻。"; return; }
-  // 从下到上（不倒序）
-  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
+  lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v))); // 从下到上
   elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下到上：${lines.join(", ")}）`;
 }
 function renderTris(el, bin){
@@ -358,6 +383,25 @@ async function finishHex(){
 
   elStatus.innerHTML = `<span class="ok">全卦完成。</span> 右侧可查看“本卦/之卦/互错综”的卦名与结构。`;
 }
+
+/* ========= 独立分布自检 ========= */
+function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
+document.getElementById("selftest").addEventListener("click", ()=>{
+  const N = Math.max(1000, parseInt(elN.value,10)||100000);
+  // 快速 PRNG，种子来自 crypto（不可复现，但速度好）
+  const rng = mulberry32(newSeed32());
+  const cnt = {6:0,7:0,8:0,9:0};
+  for(let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
+  elStat.textContent =
+    `样本数 N = ${N}\n`+
+    `计数：${JSON.stringify(cnt)}\n`+
+    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
+    `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
+  const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
+  elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
+  elCheck.style.display="block";
+  elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000。" : "";
+});
 
 /* ========= 事件 ========= */
 elStart.addEventListener("click", ()=>{ startHex(); });
