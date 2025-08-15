@@ -30,7 +30,7 @@
   .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
 
   .lines{display:flex;flex-direction:column;gap:8px}
-  .lines.bottom-up{flex-direction:column-reverse} /* 已成爻自下而上 */
+  .lines.bottom-up{flex-direction:column-reverse}
 
   .one-line{display:flex;align-items:center;gap:10px}
   .yang,.yin{position:relative;height:8px;width:220px}
@@ -40,7 +40,7 @@
   .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
   .ok{color:var(--ok)} .warn{color:#b45309}
 
-  /* code block：按主题自动换色（修复暗色对比度） */
+  /* code block colours */
   pre{
     white-space:pre-wrap;
     font-size:12px;
@@ -55,7 +55,7 @@
     max-height:44vh;
   }
 
-  /* 外部链接芯片 */
+  /* link chips */
   a.linkchip{display:inline-block;margin:6px 6px 0 0;padding:5px 9px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111;text-decoration:none;font-size:12px}
   a.linkchip:hover{box-shadow:0 1px 0 rgba(0,0,0,.08)}
 
@@ -69,17 +69,16 @@
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb;
-      /* code block (dark) */
       --code-bg:#0f0f0f; --code-fg:#e5e7eb; --code-border:#222;
     }
     .card{ border-color:#222 }
-    .btn{ background:var(--accent); color:#111; }                        /* 主按钮：浅底深字 */
+    .btn{ background:var(--accent); color:#111; }
     .btn.secondary,.btn.ghost{ background:#ffffff10; border-color:#ffffff30; color:var(--fg); }
-    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); }  /* 胶囊：深底浅字 */
+    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); }
     input,select,textarea{ background:#0f0f0f; color:var(--fg); border:1px solid #2a2a2a; border-radius:10px; padding:8px 10px; }
     .modal > .box{ background:#111; color:var(--fg); }
     .hr{ background:#222 }
-    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; } /* 链接芯片暗色可读 */
+    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; }
   }
 </style>
 </head>
@@ -89,7 +88,7 @@
   <p class="lead">每一爻需 <span class="mono">3 次变</span>：第1变先“挂一”，每变“分二且非空”，按四取余（余0记4）。点击三次得一爻，六爻成卦。</p>
 
   <div class="row">
-    <!-- 左：交互操作与过程 -->
+    <!-- 左：交互 -->
     <div class="card">
       <div class="kpi">
         <div class="pill">模式：写实分堆（A 等可能）</div>
@@ -124,7 +123,7 @@
       </div>
     </div>
 
-    <!-- 右：结果展示 -->
+    <!-- 右：结果 -->
     <div class="card">
       <div style="font-weight:600;margin-bottom:6px" id="labelMain">本卦</div>
       <div id="mainHex" class="lines"></div>
@@ -145,7 +144,7 @@
     </div>
   </div>
 
-  <!-- 独立分布自检 -->
+  <!-- 自检 -->
   <div class="card" style="margin-top:16px" aria-label="分布自检">
     <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
       <div style="flex:1;min-width:230px">
@@ -188,7 +187,7 @@
   </div>
 </div>
 
-<!-- 解卦方式（朱熹）模态 -->
+<!-- 解卦方式（朱熹） -->
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">解卦方式 <span class="caps">·</span> <b>朱熹（程朱义理·古筮法）</b></div>
@@ -215,8 +214,8 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.9.1-darkfix-pre+links+zhuxi";
-let   BUILD_SHA256 = "";
+const APP_VERSION = "v3.9.3"; // 更新版本号以标记修复
+let BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
 async function sha256Hex(s){ const enc=new TextEncoder(); const buf=await crypto.subtle.digest("SHA-256", enc.encode(s));
@@ -241,14 +240,14 @@ function firstChange(n, rng){
   const [A,B] = splitNonZero(n, rng);
   const leftRem  = rem4NonZero(A);
   const rightRem = rem4NonZero(B-1); // 先挂一
-  const taken = 1 + leftRem + rightRem; // 5 或 9
+  const taken = 1 + leftRem + rightRem; // 5 or 9
   return { after:n-taken, step:{from:n,to:n-taken,A,B,leftRem,rightRem,taken,kind:"第1变（挂一）"} };
 }
 function nextChange(n, rng){
   const [A,B] = splitNonZero(n, rng);
   const leftRem  = rem4NonZero(A);
   const rightRem = rem4NonZero(B);
-  const taken = leftRem + rightRem; // 4 或 8
+  const taken = leftRem + rightRem; // 4 or 8
   return { after:n-taken, step:{from:n,to:n-taken,A,B,leftRem,rightRem,taken,kind:"后续变"} };
 }
 function remainingToLine(n){
@@ -269,7 +268,7 @@ function genLineYarrow(rng){
 /* ========= 卦运算 & 名称 ========= */
 function isYang(v){ return v===7||v===9; }
 function isMoving(v){ return v===6||v===9; }
-function toBinary(lines){ return lines.map(v=>isYang(v)?1:0); } // 底→顶
+function toBinary(lines){ return lines.map(v=>isYang(v)?1:0); } // bottom→top
 function relatingFrom(lines){ const out=lines.slice(); for(let i=0;i<6;i++){ if(lines[i]===6) out[i]=7; else if(lines[i]===9) out[i]=8; } return out; }
 function nuclearFromBinary(b){ return [b[1],b[2],b[3], b[2],b[3],b[4]]; }
 function invertedFromBinary(b){ return [b[5],b[4],b[3],b[2],b[1],b[0]]; }
@@ -355,7 +354,7 @@ function renderMore(el,bMain){
   el.textContent=[ line("互卦",bNuc), line("错卦",bOpp), line("综卦",bInv) ].join("\n");
 }
 
-/* ========= 外部链接构建 ========= */
+/* ========= 外部链接 ========= */
 const CN_POS = ["初","二","三","四","五","上"];
 function buildLinks(targetEl, binArr, linesForYao){
   const info = hexInfoOf(binArr.join(""));
@@ -384,7 +383,7 @@ function buildLinks(targetEl, binArr, linesForYao){
   });
   targetEl.appendChild(box);
 
-  // 动爻快捷搜索（本卦动爻）
+  // 动爻搜索
   if (Array.isArray(linesForYao) && linesForYao.some(isMoving)){
     const t2=document.createElement("div"); t2.className="small muted"; t2.style.marginTop="6px"; t2.textContent="动爻直达（爻辞搜索）：";
     targetEl.appendChild(t2);
@@ -392,7 +391,7 @@ function buildLinks(targetEl, binArr, linesForYao){
     linesForYao.forEach((v,i)=>{
       if(isMoving(v)){
         const yao = (v===9) ? "九" : "六";
-        const pos = CN_POS[i]; // i:0..5（底→顶）
+        const pos = CN_POS[i]; // i:0..5 bottom→top
         const qq = encodeURIComponent(`周易 ${name} ${yao}${pos} 爻辞`);
         const a=document.createElement("a");
         a.className="linkchip"; a.href=`https://www.bing.com/search?q=${qq}`;
@@ -404,13 +403,13 @@ function buildLinks(targetEl, binArr, linesForYao){
   }
 }
 
-/* ========= 交互状态 ========= */
+/* ========= 状态 ========= */
 const state = {
   rng: cryptoRng(),
   sessionNonce: "",
   lines: [],        // 已成爻（底→顶）
   hexDetail: [],    // 每爻三变明细
-  curr: null,       // { n, stepIdx(1..3), steps:[] }
+  curr: null,
   finished: false,
 };
 
@@ -426,7 +425,7 @@ function resetAll(){
   elCurrDetail.textContent = "";
   elMain.innerHTML = elRel.innerHTML = elMore.textContent = "";
   elTriM.textContent = elTriR.textContent = "";
-  linksMain.innerHTML = linksRel.innerHTML = "";            // 清空外部链接
+  linksMain.innerHTML = linksRel.innerHTML = "";
   elLabelMain.textContent="本卦"; elLabelRel.textContent="之卦";
   methodBtn.disabled = true;
   renderBuilt(state.lines);
@@ -506,7 +505,6 @@ async function finishHex(){
   if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
-  // 构建外部链接（搜索）
   buildLinks(linksMain, binMain, state.lines);
   buildLinks(linksRel, binRel, state.lines);
 
@@ -529,7 +527,7 @@ async function finishHex(){
 }
 
 /* ========= 朱熹占断 ========= */
-function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; } // 1..6（底→顶）
+function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; }
 function zhuXiAdvice(lines){
   const mov = movingIndices(lines); const m = mov.length;
   const mainBin = toBinary(lines);
@@ -561,7 +559,7 @@ function zhuXiAdvice(lines){
     };
   }
   if (m===3){
-    const frontTen = mov.includes(1); // 含初爻=前十；不含初爻=后十
+    const frontTen = mov.includes(1); // 含初爻=前十
     const titleTail = frontTen ? "（前十：本卦为贞）" : "（后十：之卦为悔）";
     const read = frontTen
       ? [
@@ -580,7 +578,7 @@ function zhuXiAdvice(lines){
   }
   if (m===4){
     const stat = [1,2,3,4,5,6].filter(i=> !mov.includes(i));
-    const main = Math.min(stat[0], stat[1]); // 以下爻为主
+    const main = Math.min(stat[0], stat[1]);
     return {
       title:"四爻动",
       read:[{type:"爻辞", which:`之卦中两静爻之爻辞：第 ${stat[0]}、第 ${stat[1]} 爻（以下爻为主：第 ${main} 爻）`, hex:relLbl}],
@@ -641,12 +639,41 @@ function openMethod(){
   setTimeout(()=>methodModal.querySelector(".box").focus(),0);
 }
 function closeMethod(){ methodModal.style.display="none"; methodBtn?.focus(); }
+
+/* ========= 指南模态绑定（修复） ========= */
+function openGuide(){ guideModal.style.display="block"; setTimeout(()=>guideModal.querySelector(".box").focus(),0); }
+function closeGuide(){ guideModal.style.display="none"; guideBtn?.focus(); }
+
+/* ========= 自检函数绑定（修复） ========= */
+function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
+
+/* ========= 事件 ========= */
 methodBtn.addEventListener("click", openMethod);
 methodClose.addEventListener("click", closeMethod);
 methodModal.addEventListener("click", (e)=>{ if(e.target===methodModal) closeMethod(); });
 document.addEventListener("keydown",(e)=>{ if(methodModal.style.display==="block" && e.key==="Escape") closeMethod(); });
 
-/* ========= 事件 ========= */
+guideBtn.addEventListener("click", openGuide);
+guideClose.addEventListener("click", closeGuide);
+guideModal.addEventListener("click", (e)=>{ if(e.target===guideModal) closeGuide(); });
+document.addEventListener("keydown",(e)=>{ if(guideModal.style.display==="block" && e.key==="Escape") closeGuide(); });
+
+document.getElementById("selftest").addEventListener("click", ()=>{
+  const N = Math.max(1000, parseInt(elN.value,10)||100000);
+  const rng = mulberry32(newSeed32());
+  const cnt = {6:0,7:0,8:0,9:0};
+  for(let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
+  elStat.textContent =
+    `样本数 N = ${N}\n`+
+    `计数：${JSON.stringify(cnt)}\n`+
+    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
+    `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
+  const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
+  elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
+  elCheck.style.display="block";
+  elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000。" : "";
+});
+
 elStart.addEventListener("click", ()=>{ startHex(); });
 elSplit.addEventListener("click", ()=>{ if(state.curr) doOneSplit(); });
 elNextLine.addEventListener("click", ()=>{ if(!state.curr && state.lines.length<6) { startNewLine(); elStatus.innerHTML = `继续起卦。当前爻：第 ${state.lines.length+1} 爻（自下而上）`; } });
