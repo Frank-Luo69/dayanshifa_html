@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>大衍筮法 · 写实分堆（最终发布版）</title>
-<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型，强调真实与可审计；支持可验证随机性与分布自检（趋势+经验基准）。" />
+<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型，强调真实与可审计；支持可验证随机性与分布自检（趋势+经验基准）。本卦/之卦/互卦/错卦/综卦均显示对应的64卦卦名。" />
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#000; --accent:#111; }
   *{box-sizing:border-box}
@@ -41,6 +41,10 @@
   /* modal */
   #aboutModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
   #aboutBox{max-width:640px;margin:10vh auto;background:#fff;border-radius:12px;padding:16px;outline:none}
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb; }
+    .btn.secondary{ background:#ffffff10; border-color:#ffffff20; color:var(--fg); }
+  }
 </style>
 </head>
 <body>
@@ -72,12 +76,12 @@
 
         <div class="grid2" style="margin-top:14px">
           <div class="card">
-            <div style="font-weight:600;margin-bottom:6px">本卦</div>
+            <div id="labelMain" style="font-weight:600;margin-bottom:6px">本卦</div>
             <div id="mainHex" class="lines"></div>
             <div class="small muted" id="triMain"></div>
           </div>
           <div class="card">
-            <div style="font-weight:600;margin-bottom:6px">之卦</div>
+            <div id="labelRel" style="font-weight:600;margin-bottom:6px">之卦</div>
             <div id="relHex" class="lines"></div>
             <div class="small muted" id="triRel"></div>
           </div>
@@ -139,7 +143,7 @@
 
 <script>
 /* ========= 版本与构建哈希（运行时自动生成） ========= */
-const APP_VERSION = "v1.1.1-realistic"; // 真实写实 + VRS + 经验基准说明
+const APP_VERSION = "v1.2.0-realistic"; // 新增：64卦卦名显示
 let   BUILD_SHA256 = "auto"; // 若为 "auto" 则运行时计算
 
 const __appendVersionToCommit = true; // 将版本/哈希写入承诺串，便于审计
@@ -245,13 +249,91 @@ function nuclearFromBinary(b){ return [b[1],b[2],b[3], b[2],b[3],b[4]]; }
 function invertedFromBinary(b){ return [b[5],b[4],b[3],b[2],b[1],b[0]]; }
 function oppositeFromBinary(b){ return b.map(x=>x?0:1); }
 
-/* ========= 八卦命名 ========= */
+/* ========= 八卦命名（组三） ========= */
 const TRIS = {
   "111": {zh:"乾",sym:"☰"}, "110": {zh:"兑",sym:"☱"}, "101": {zh:"离",sym:"☲"}, "100": {zh:"震",sym:"☳"},
   "011": {zh:"巽",sym:"☴"}, "010": {zh:"坎",sym:"☵"}, "001": {zh:"艮",sym:"☶"}, "000": {zh:"坤",sym:"☷"},
 };
 function triNameOf(b3){ const key = b3.join(""); return TRIS[key] ? `${TRIS[key].sym}${TRIS[key].zh}` : key; }
 function trisOf(bin){ const lower = bin.slice(0,3), upper = bin.slice(3,6); return { lower, upper }; }
+
+/* ========= 64 卦（文王序）映射：key 为二进制“底→顶” ========= */
+const HEX64 = {
+  "111111": { no:1,  zh:"乾",   full:"乾为天" },
+  "000000": { no:2,  zh:"坤",   full:"坤为地" },
+  "100010": { no:3,  zh:"屯",   full:"水雷屯" },
+  "010001": { no:4,  zh:"蒙",   full:"山水蒙" },
+  "111010": { no:5,  zh:"需",   full:"水天需" },
+  "010111": { no:6,  zh:"讼",   full:"天水讼" },
+  "010000": { no:7,  zh:"师",   full:"地水师" },
+  "000010": { no:8,  zh:"比",   full:"水地比" },
+  "111011": { no:9,  zh:"小畜", full:"风天小畜" },
+  "110111": { no:10, zh:"履",   full:"天泽履" },
+  "111000": { no:11, zh:"泰",   full:"地天泰" },
+  "000111": { no:12, zh:"否",   full:"天地否" },
+  "101111": { no:13, zh:"同人", full:"天火同人" },
+  "111101": { no:14, zh:"大有", full:"火天大有" },
+  "001000": { no:15, zh:"谦",   full:"地山谦" },
+  "000100": { no:16, zh:"豫",   full:"雷地豫" },
+  "100110": { no:17, zh:"随",   full:"泽雷随" },
+  "011001": { no:18, zh:"蛊",   full:"山风蛊" },
+  "110000": { no:19, zh:"临",   full:"地泽临" },
+  "000011": { no:20, zh:"观",   full:"风地观" },
+  "100101": { no:21, zh:"噬嗑", full:"火雷噬嗑" },
+  "101001": { no:22, zh:"贲",   full:"山火贲" },
+  "000001": { no:23, zh:"剥",   full:"山地剥" },
+  "100000": { no:24, zh:"复",   full:"地雷复" },
+  "100111": { no:25, zh:"无妄", full:"天雷无妄" },
+  "111001": { no:26, zh:"大畜", full:"山天大畜" },
+  "100001": { no:27, zh:"颐",   full:"山雷颐" },
+  "011110": { no:28, zh:"大过", full:"泽风大过" },
+  "010010": { no:29, zh:"坎",   full:"坎为水" },
+  "101101": { no:30, zh:"离",   full:"离为火" },
+  "001110": { no:31, zh:"咸",   full:"泽山咸" },
+  "011100": { no:32, zh:"恒",   full:"雷风恒" },
+  "001111": { no:33, zh:"遯",   full:"天山遯" },
+  "111100": { no:34, zh:"大壮", full:"雷天大壮" },
+  "000101": { no:35, zh:"晋",   full:"火地晋" },
+  "101000": { no:36, zh:"明夷", full:"地火明夷" },
+  "101011": { no:37, zh:"家人", full:"风火家人" },
+  "110101": { no:38, zh:"睽",   full:"火泽睽" },
+  "001010": { no:39, zh:"蹇",   full:"水山蹇" },
+  "010100": { no:40, zh:"解",   full:"雷水解" },
+  "110001": { no:41, zh:"损",   full:"山泽损" },
+  "100011": { no:42, zh:"益",   full:"风雷益" },
+  "111110": { no:43, zh:"夬",   full:"泽天夬" },
+  "011111": { no:44, zh:"姤",   full:"天风姤" },
+  "000110": { no:45, zh:"萃",   full:"泽地萃" },
+  "011000": { no:46, zh:"升",   full:"地风升" },
+  "010110": { no:47, zh:"困",   full:"泽水困" },
+  "011010": { no:48, zh:"井",   full:"水风井" },
+  "101110": { no:49, zh:"革",   full:"泽火革" },
+  "011101": { no:50, zh:"鼎",   full:"火风鼎" },
+  "100100": { no:51, zh:"震",   full:"震为雷" },
+  "001001": { no:52, zh:"艮",   full:"艮为山" },
+  "001011": { no:53, zh:"渐",   full:"风山渐" },
+  "110100": { no:54, zh:"归妹", full:"雷泽归妹" },
+  "101100": { no:55, zh:"丰",   full:"雷火丰" },
+  "001101": { no:56, zh:"旅",   full:"火山旅" },
+  "011011": { no:57, zh:"巽",   full:"巽为风" },
+  "110110": { no:58, zh:"兑",   full:"兑为泽" },
+  "010011": { no:59, zh:"涣",   full:"风水涣" },
+  "110010": { no:60, zh:"节",   full:"水泽节" },
+  "110011": { no:61, zh:"中孚", full:"风泽中孚" },
+  "001100": { no:62, zh:"小过", full:"雷山小过" },
+  "101010": { no:63, zh:"既济", full:"水火既济" },
+  "010101": { no:64, zh:"未济", full:"火水未济" },
+};
+// 由二进制取 64卦信息与显示标签
+function hexInfoOf(bin){
+  const key = Array.isArray(bin) ? bin.join("") : String(bin);
+  return HEX64[key] || null;
+}
+function hexLabel(bin){
+  const info = hexInfoOf(bin);
+  if (!info) return `未收录（${Array.isArray(bin)?bin.join(""):bin}）`;
+  return `${info.no}. ${info.full}「${info.zh}」`;
+}
 
 /* ========= UI 渲染 ========= */
 const $ = (s)=>document.querySelector(s);
@@ -261,6 +343,8 @@ const elMore=$("#moreHex"), elDet=$("#detail"), elVRS=$("#vrs"), elExport=$("#ex
 const elN=$("#N"), elTestBtn=$("#selftest"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
 const aboutBtn=$("#aboutBtn"), aboutModal=$("#aboutModal"), aboutClose=$("#aboutClose"), aboutVer=$("#aboutVer"), verpill=$("#verpill");
 const elSeedPill = $("#seedpill");
+const elLabelMain = $("#labelMain");
+const elLabelRel  = $("#labelRel");
 
 function renderLines(container, lines){
   container.innerHTML = "";
@@ -287,10 +371,19 @@ function renderMore(el, bMain){
   const bNuc = nuclearFromBinary(bMain);
   const bOpp = oppositeFromBinary(bMain);
   const bInv = invertedFromBinary(bMain);
-  el.textContent =
-    `互卦：${triNameOf(bNuc.slice(0,3))}/${triNameOf(bNuc.slice(3,6))}  ${bNuc.join("")}\n`+
-    `错卦：${triNameOf(bOpp.slice(0,3))}/${triNameOf(bOpp.slice(3,6))}  ${bOpp.join("")}\n`+
-    `综卦：${triNameOf(bInv.slice(0,3))}/${triNameOf(bInv.slice(3,6))}  ${bInv.join("")}`;
+
+  const line = (label, b)=>{
+    const {lower, upper} = trisOf(b);
+    const tri = `${triNameOf(lower)}/${triNameOf(upper)}`;
+    const bin = b.join("");
+    return `${label}：${tri}  ${bin} ｜ ${hexLabel(b)}`;
+  };
+
+  el.textContent = [
+    line("互卦", bNuc),
+    line("错卦", bOpp),
+    line("综卦", bInv),
+  ].join("\n");
 }
 function renderDetail(el, detail){
   const obj = detail.map(d => ({
@@ -327,6 +420,10 @@ async function castOnce(){
   renderDetail(elDet, res.detail);
   elRes.style.display = "block";
 
+  // 在标题处写入 64卦卦名
+  if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
+  if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
+
   // VRS 承诺（包含 seed32 标签）
   const seedShown = "seed32:"+label; // user:xxx 或 auto:123456789
   const nonce = "n:"+Date.now();
@@ -342,7 +439,8 @@ async function castOnce(){
   window.__lastCast = {
     seed32, seedLabel: label, nonce, entropy,
     version: APP_VERSION, build: BUILD_SHA256, commit,
-    lines: res.lines, detail: res.detail, relating: linesRel
+    lines: res.lines, detail: res.detail, relating: linesRel,
+    binMain, binRel
   };
 }
 
@@ -380,7 +478,9 @@ $("#exportJson").addEventListener("click", ()=>{
   if (!window.__lastCast) return alert("请先起卦");
   const blob = new Blob([JSON.stringify(window.__lastCast, null, 2)], {type:"application/json"});
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-  a.download = "yarrow-realistic.json"; a.click(); URL.revokeObjectURL(a.href);
+  const ts = new Date().toISOString().replace(/[:.]/g,"-");
+  const c8 = (window.__lastCast.commit||"").slice(0,8);
+  a.download = `yarrow-${ts}-${c8}.json`; a.click(); URL.revokeObjectURL(a.href);
 });
 
 $("#aboutBtn").addEventListener("click", async ()=>{
