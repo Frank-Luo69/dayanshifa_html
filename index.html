@@ -8,14 +8,14 @@
 <style>
   :root{
     --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309;
-    /* code block (light) */
     --code-bg:#f7f7f7; --code-fg:#111; --code-border:#e5e7eb;
     --chip-border:#d1d5db;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
   .wrap{max-width:1100px;margin:0 auto;padding:24px}
-  h1{font-size:22px;margin:0 0 8px} p.lead{margin:0 0 12px;color:var(--muted)}
+  h1{font-size:22px;margin:0 0 8px}
+  p.lead{margin:0 0 12px;color:var(--muted)}
   .helpbar{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 18px}
   .helpchip{display:inline-block;padding:6px 10px;border:1px dashed #00000030;border-radius:999px;font-size:12px;cursor:pointer;background:#ffffff70}
   .row{display:grid;gap:16px;grid-template-columns:1fr}
@@ -43,19 +43,11 @@
   .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
   .ok{color:var(--ok)} .warn{color:var(--warn)}
 
-  /* code block：按主题自动换色（修复暗色对比度） */
+  /* code block 双色主题 */
   pre{
-    white-space:pre-wrap;
-    font-size:12px;
-    font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
-    background:var(--code-bg);
-    color:var(--code-fg);
-    border:1px solid var(--code-border);
-    border-radius:10px;
-    padding:10px;
-    overflow:auto;
-    line-height:1.6;
-    max-height:44vh;
+    white-space:pre-wrap;font-size:12px;font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    background:var(--code-bg);color:var(--code-fg);border:1px solid var(--code-border);
+    border-radius:10px;padding:10px;overflow:auto;line-height:1.6;max-height:44vh;
   }
 
   /* 外部链接芯片 */
@@ -72,17 +64,16 @@
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb;
-      --code-bg:#0f0f0f; --code-fg:#e5e7eb; --code-border:#222;
-      --chip-border:#2a2a2a;
+      --code-bg:#0f0f0f; --code-fg:#e5e7eb; --code-border:#222; --chip-border:#2a2a2a;
     }
     .card{ border-color:#222 }
-    .btn{ background:var(--accent); color:#111; }                        /* 主按钮：浅底深字 */
+    .btn{ background:var(--accent); color:#111; }
     .btn.secondary,.btn.ghost{ background:#ffffff10; border-color:#ffffff30; color:var(--fg); }
-    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); }  /* 胶囊：深底浅字 */
+    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); }
     input,select,textarea{ background:#0f0f0f; color:var(--fg); border:1px solid #2a2a2a; border-radius:10px; padding:8px 10px; }
     .modal > .box{ background:#111; color:var(--fg); }
     .hr{ background:#222 }
-    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; } /* 链接芯片暗色可读 */
+    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; }
     .helpchip{ background:#1a1a1a; border-color:#2a2a2a; }
   }
 </style>
@@ -179,19 +170,19 @@
   </p>
 </div>
 
-<!-- 指南模态：把“这是什么 / 30秒上手 / 术语 + 误区”合一 -->
+<!-- 指南 -->
 <div class="modal" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
   <div class="box" tabindex="-1">
     <div id="guideTitle" class="title">指南 · 一看就会</div>
-    <div class="small"><b>这是什么：</b>用电脑或手机，按古筮法的真实流程“分二/挂一/按四取余”，每三次点按得到一爻，六爻成卦。本应用严格复现算法并给出解卦入口。</div>
+    <div class="small"><b>这是什么：</b>按古筮法真实流程“分二/挂一/按四取余”，每三次点按得到一爻，六爻成卦。本应用严格复现算法并给出解卦入口。</div>
     <div class="hr"></div>
     <div class="small"><b>30 秒上手：</b></div>
     <ol class="small" style="margin:6px 0 6px 18px; line-height:1.75">
       <li>点<b>开始一卦</b>。</li>
-      <li>对每一爻，连续点<b>分堆（下一变）</b><b>3 次</b>：系统会自动做“先挂一、分二、按四取余”。</li>
-      <li>三变后可见本爻（6/7/8/9）。点<b>开始下一爻</b>直到六爻完成。</li>
-      <li>右侧显示<b>本卦/之卦/互错综</b>与<b>卦名</b>；下方有<b>外部链接</b>快速查看卦辞、爻辞。</li>
-      <li>想知道<b>读哪段</b>——点右上<b>解卦（朱熹）</b>即可。</li>
+      <li>对每一爻，连续点<b>分堆（下一变）</b><b>3 次</b>：系统自动做“先挂一、分二、按四取余”。</li>
+      <li>三变后得到本爻（6/7/8/9）。点<b>开始下一爻</b>直到六爻完成。</li>
+      <li>右侧查看<b>本卦/之卦/互错综</b>与<b>卦名</b>；下方链接可查<b>卦辞/爻辞</b>原文。</li>
+      <li>不确定读哪段？点<b>解卦（朱熹）</b>给你明确指示。</li>
     </ol>
     <div class="hr"></div>
     <div class="small"><b>术语最简：</b>动爻=6/9（会变）；阳爻=7/9；阴爻=6/8。之卦=把所有动爻翻成相反性（6→阳，9→阴）。</div>
@@ -203,20 +194,18 @@
   </div>
 </div>
 
-<!-- 解卦方式（朱熹）：人话、一步一步 -->
+<!-- 解卦（朱熹） -->
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">如何解卦 · 朱熹法（一步到位）</div>
-    <div class="small muted">核心只有一件事：<b>现在该读哪段</b>（卦辞/爻辞/用辞）。下面已根据你的动爻自动给出答案。</div>
+    <div class="small muted">核心：<b>现在该读哪段</b>（卦辞/爻辞/用辞）。已根据你的动爻自动判断。</div>
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
     <div class="hr"></div>
     <div class="small muted">
-      规则提要：<br>
-      ① 六爻静：读<b>本卦卦辞</b>（并参《大象》）；② 一爻动：读<b>本卦该动爻之爻辞</b>；③ 二爻动：读<b>两动爻之爻辞</b>，以上爻为主；<br>
-      ④ 三爻动：读<b>本卦卦辞（贞）+之卦卦辞（悔）</b>，动爻含初爻→前十→主本卦；不含初→后十→主之卦；<br>
-      ⑤ 四爻动：读<b>之卦中两静爻之爻辞</b>（以下爻为主）；⑥ 五爻动：读<b>之卦唯一静爻之爻辞</b>；<br>
-      ⑦ 六爻皆动：若本卦为<b>乾/坤</b>，取<b>用九/用六</b>；其余取<b>之卦卦辞</b>。
+      规则提要：① 六爻静：读<b>本卦卦辞</b>；② 一动：读<b>该动爻</b>；③ 二动：读<b>两动爻</b>（以上爻为主）；
+      ④ 三动：读<b>本卦（贞）+之卦（悔）</b>，含初爻→前十→偏本卦；不含初→后十→偏之卦；
+      ⑤ 四动：读<b>变卦中两静爻</b>（以下爻为主）；⑥ 五动：读<b>变卦唯一静爻</b>；⑦ 六动：<b>乾/坤用辞</b>，其余<b>之卦卦辞</b>。
     </div>
     <div class="hr"></div>
     <div style="text-align:right;margin-top:6px">
@@ -227,7 +216,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v4.0.0-ux";
+const APP_VERSION = "v4.1.0-ux-stable";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -294,11 +283,12 @@ const TRIS = {
 function triNameOf(b3){ const k=b3.join(""); return TRIS[k]?`${TRIS[k].sym}${TRIS[k].zh}`:k; }
 function trisOf(bin){ const lower=bin.slice(0,3), upper=bin.slice(3,6); return {lower,upper}; }
 
+/* 64卦映射（已修正第12卦“否”） */
 const HEX64 = {
 "111111":{no:1,zh:"乾",full:"乾为天"},"000000":{no:2,zh:"坤",full:"坤为地"},"100010":{no:3,zh:"屯",full:"水雷屯"},
 "010001":{no:4,zh:"蒙",full:"山水蒙"},"111010":{no:5,zh:"需",full:"水天需"},"010111":{no:6,zh:"讼",full:"天水讼"},
 "010000":{no:7,zh:"师",full:"地水师"},"000010":{no:8,zh:"比",full:"水地比"},"111011":{no:9,zh:"小畜",full:"风天小畜"},
-"110111":{no:10,zh:"履",full:"天泽履"},"111000":{no:11,zh:"泰",full:"地天泰"},"000111":{no:12,zh:"天地否"},
+"110111":{no:10,zh:"履",full:"天泽履"},"111000":{no:11,zh:"泰",full:"地天泰"},"000111":{no:12,zh:"否",full:"天地否"},
 "101111":{no:13,zh:"同人",full:"天火同人"},"111101":{no:14,zh:"大有",full:"火天大有"},"001000":{no:15,zh:"谦",full:"地山谦"},
 "000100":{no:16,zh:"豫",full:"雷地豫"},"100110":{no:17,zh:"随",full:"泽雷随"},"011001":{no:18,zh:"蛊",full:"山风蛊"},
 "110000":{no:19,zh:"临",full:"地泽临"},"000011":{no:20,zh:"观",full:"风地观"},"100101":{no:21,zh:"噬嗑",full:"火雷噬嗑"},
@@ -318,8 +308,38 @@ const HEX64 = {
 "110011":{no:61,zh:"中孚",full:"风泽中孚"},"001100":{no:62,zh:"小过",full:"雷山小过"},"101010":{no:63,zh:"既济",full:"水火既济"},
 "010101":{no:64,zh:"未济",full:"火水未济"},
 };
+
+/* 八卦→象名：用于自动合成 full 的兜底 */
+const TRIGRAM_ELEM = {
+  "111":"天","110":"泽","101":"火","100":"雷","011":"风","010":"水","001":"山","000":"地"
+};
+
+/* —— 自检+自动补全：即使表里缺 full/zh 也不会破界面 —— */
+(function validateHexMap(){
+  Object.entries(HEX64).forEach(([k,v])=>{
+    if(!v || typeof v!=="object") return;
+    const bits = k.split("").map(x=> x==="1"?1:0);
+    const lower = bits.slice(0,3), upper = bits.slice(3,6);
+    const upK = upper.join(""), lowK = lower.join("");
+    const zh  = v.zh  || ""; // 尽量保留原短名；缺就空
+    const full= v.full|| `${TRIGRAM_ELEM[upK]||""}${TRIGRAM_ELEM[lowK]||""}${zh}`;
+    if(!v.full || !v.zh){ HEX64[k] = { ...v, zh, full }; }
+  });
+})();
+
 function hexInfoOf(bin){ const k=Array.isArray(bin)?bin.join(""):String(bin); return HEX64[k]||null; }
-function hexLabel(bin){ const i=hexInfoOf(bin); return i?`${i.no}. ${i.full}「${i.zh}」`:`未收录（${Array.isArray(bin)?bin.join(""):bin}）`; }
+/* 稳健版标签函数：绝不会出现 undefined */
+function hexLabel(bin){
+  const key = Array.isArray(bin) ? bin.join("") : String(bin);
+  const info = HEX64[key];
+  if(!info) return `未收录（${key}）`;
+  const bits = Array.isArray(bin) ? bin.slice() : key.split("").map(x=> x==="1"?1:0);
+  const lower = bits.slice(0,3), upper = bits.slice(3,6);
+  const upK = upper.join(""), lowK = lower.join("");
+  const shortName = info.zh || "";
+  const fullName  = info.full || `${TRIGRAM_ELEM[upK]||""}${TRIGRAM_ELEM[lowK]||""}${shortName}`;
+  return `${info.no}. ${fullName}「${shortName}」`;
+}
 
 /* ========= UI 查询 ========= */
 const $ = s=>document.querySelector(s);
@@ -368,7 +388,7 @@ function renderMore(el,bMain){
   el.textContent=[ line("互卦",bNuc), line("错卦",bOpp), line("综卦",bInv) ].join("\n");
 }
 
-/* ========= 外部链接构建 ========= */
+/* ========= 外部链接 ========= */
 const CN_POS = ["初","二","三","四","五","上"];
 function buildLinks(targetEl, binArr, linesForYao){
   const info = hexInfoOf(binArr.join(""));
@@ -397,7 +417,7 @@ function buildLinks(targetEl, binArr, linesForYao){
   });
   targetEl.appendChild(box);
 
-  // 动爻快捷搜索（本卦动爻）
+  // 动爻快捷搜索（基于本卦的动位）
   if (Array.isArray(linesForYao) && linesForYao.some(isMoving)){
     const t2=document.createElement("div"); t2.className="small muted"; t2.style.marginTop="6px"; t2.textContent="动爻直达：";
     targetEl.appendChild(t2);
@@ -516,8 +536,8 @@ async function finishHex(){
   renderLines(elRel, relating);
   renderTris(elTriM, binMain);
   renderTris(elTriR, binRel);
-  if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
-  if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
+  elLabelMain.textContent = `本卦：` + hexLabel(binMain);
+  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
   buildLinks(linksMain, binMain, state.lines);
   buildLinks(linksRel, binRel, state.lines);
@@ -541,9 +561,7 @@ async function finishHex(){
 }
 
 /* ========= 朱熹占断（人话逻辑） ========= */
-function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; } // 1..6（底→顶）
-function isAllYang(lines){ return lines.every(v=> (v===7||v===9) ); }
-function isAllYin(lines){ return lines.every(v=> (v===6||v===8) ); }
+function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; }
 
 function zhuXiAdvice(lines){
   const mov = movingIndices(lines); const m = mov.length;
@@ -602,8 +620,8 @@ function zhuXiAdvice(lines){
     };
   }
   if (m===6){
-    const isQian = isAllYang(lines) && mainBin.join("")==="111111";
-    const isKun  = isAllYin(lines)  && mainBin.join("")==="000000";
+    const isQian = mainBin.join("")==="111111";
+    const isKun  = mainBin.join("")==="000000";
     if (isQian){ return { title:"六爻皆动（本卦为乾）：用九",
         read:[{type:"用辞", which:"乾卦『用九』", hex:"1. 乾为天"}],
         note:"乾坤特例：取用辞。"}; }
@@ -660,7 +678,7 @@ document.getElementById("selftest").addEventListener("click", ()=>{
   elStat.textContent =
     `样本数 N = ${N}\n`+
     `计数：${JSON.stringify(cnt)}\n`+
-    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
+    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct[cnt[8],N]}, 9:${pct[cnt[9],N]}}\n`+
     `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
   const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
   elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
@@ -673,7 +691,7 @@ elSplit.addEventListener("click", ()=>{ if(state.curr) doOneSplit(); });
 elNextLine.addEventListener("click", ()=>{ if(!state.curr && state.lines.length<6) { startNewLine(); elStatus.innerHTML = `继续起卦。当前爻：第 ${state.lines.length+1} 爻（自下而上）`; } });
 elReset.addEventListener("click", ()=> resetAll());
 
-/* 打开面板的快速入口 */
+/* 快捷帮助入口 */
 document.getElementById("openGuideChip").addEventListener("click", openGuide);
 document.getElementById("openHowChip").addEventListener("click", openGuide);
 document.getElementById("openReadChip").addEventListener("click", ()=>{ if(state.finished){ openMethod(); } else { openGuide(); } });
