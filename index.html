@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（极简版）</title>
-<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型；每次起卦使用强随机（crypto）。本卦/之卦/互卦/错卦/综卦均显示对应的64卦卦名。" />
+<title>大衍筮法 · 写实分堆（极简·精简版）</title>
+<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。写实分堆（A 等可能）+ 强随机（crypto）。显示本卦/之卦/互卦/错卦/综卦的64卦卦名。" />
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#000; --accent:#111; }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",Arial}
   .wrap{max-width:1100px;margin:0 auto;padding:24px}
   h1{font-size:22px;margin:0 0 8px}
   p.lead{margin:0 0 18px;color:var(--muted)}
@@ -33,7 +33,7 @@
   .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
   .muted{color:var(--muted)}
   pre{white-space:pre-wrap;font-size:12px;background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px;overflow:auto}
-  .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
   .kpi{display:flex;gap:12px;flex-wrap:wrap}
   .kpi .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
   .small{font-size:12px}
@@ -48,8 +48,8 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>大衍筮法 · 写实分堆（极简版）</h1>
-  <p class="lead">严格“三变成一爻”：<span class="mono">分二→挂一→按四取余（余0记4）</span>。本应用采用<strong>写实分堆（A 等可能）</strong>与<strong>强随机（crypto）</strong>，不提供种子和导出。</p>
+  <h1>大衍筮法 · 写实分堆（极简·精简版）</h1>
+  <p class="lead">流程：<span class="mono">分二→挂一→按四取余（余0记4）×3 ＝ 一爻</span>，六次成卦。采用<strong>写实分堆（A 等可能）</strong>与<strong>强随机（crypto）</strong>。</p>
 
   <div class="row">
     <div class="card">
@@ -59,8 +59,8 @@
       </div>
 
       <div id="result" style="margin-top:14px;display:none">
-        <div class="kpi" aria-label="关键参数">
-          <div class="pill">引擎：写实分堆（等可能切分）</div>
+        <div class="kpi" aria-label="关键信息">
+          <div class="pill">引擎：写实分堆（等可能）</div>
           <div class="pill">RNG：强随机</div>
           <div class="pill">VRS：<span class="mono" id="vrs"></span></div>
           <div class="pill">版本：<span class="mono" id="verpill"></span></div>
@@ -102,8 +102,7 @@
       </div>
       <div id="check" style="margin-top:12px;display:none">
         <div class="small muted">
-          参考趋势（写实等可能分堆，长期模拟）：整体呈 <b>9 ≥ 8 ≫ 7 > 6</b>；<br/>
-          经验基准（长期模拟、非校准）：<span class="mono">6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</span>。样本越大越稳定。统计仅作健康检查，不用于判定对错。
+          趋势参考（写实分堆，长期模拟）：<b>9 ≥ 8 ≫ 7 > 6</b>；经验基准约 <span class="mono">6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</span>。仅作健康检查。
         </div>
         <pre id="stat" class="mono" aria-live="polite"></pre>
         <div id="statWarn" class="small warn"></div>
@@ -112,20 +111,20 @@
   </div>
 
   <p class="small muted" style="margin-top:16px">
-    注：动爻＝6（老阴）、9（老阳）。之卦＝动位翻转（6→阳、9→阴）。互卦：二三四为下、三四五为上；错卦：阴阳互换；综卦：六爻倒置。八卦映射（底→顶）：乾111、兑110、离101、震100、巽011、坎010、艮001、坤000。
+    注：动爻＝6（老阴）、9（老阳）；之卦＝动位翻转（6→阳、9→阴）。互卦：二三四为下、三四五为上；错卦：阴阳互换；综卦：六爻倒置。八卦映射（底→顶）：乾111、兑110、离101、震100、巽011、坎010、艮001、坤000。
   </p>
 </div>
 
 <!-- 关于模态 -->
 <div id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
   <div id="aboutBox" tabindex="-1">
-    <div id="aboutTitle" style="font-weight:600;margin-bottom:8px">关于 · 大衍筮法（写实分堆·极简版）</div>
+    <div id="aboutTitle" style="font-weight:600;margin-bottom:8px">关于 · 大衍筮法（极简·精简版）</div>
     <div class="small" style="color:#4b5563">
-      <p>起卦法：<b>写实分堆模型（唯一）</b>。每变将 N 根随机分两堆且非空（A∈[1,N−1]），第一变先挂一，按四取余（余0记4）。</p>
-      <p>三变不变量：第1变仅取5或9；第2/3变仅取4或8；三变后剩余∈{24,28,32,36}→映射到6/7/8/9（违反即报错）。</p>
-      <p>随机性：<b>强随机（crypto）</b>；本版不提供“种子/导出/复制”功能，侧重即用即得。</p>
-      <p>概率特征（长期统计，A 等可能写实）：经验基准约为 <b>6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</b>；不同样本有轻微波动。</p>
-      <p>VRS：显示运行承诺哈希（基于运行熵与版本信息），用于标记本次结果；本版不提供复算材料导出。</p>
+      <p>起卦法：<b>写实分堆</b>。每变将 N 根随机分两堆且非空（A∈[1,N−1]），第一变先挂一，按四取余（余0记4）。</p>
+      <p>三变不变量：第1变仅取5或9；第2/3变仅取4或8；三变后剩余∈{24,28,32,36}→映射到6/7/8/9。</p>
+      <p>随机性：<b>强随机（crypto）</b>；本版不提供“种子/导出/复制”。</p>
+      <p>概率（长期模拟，A 等可能）：<b>6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</b>（随样本略有波动）。</p>
+      <p>VRS：显示本次运行承诺哈希（含版本/构建），用于标记结果；不提供复算材料。</p>
       <p>版本：<span class="mono" id="aboutVer"></span></p>
     </div>
     <div style="margin-top:12px;text-align:right">
@@ -135,60 +134,56 @@
 </div>
 
 <script>
-/* ========= 版本与构建哈希 ========= */
-const APP_VERSION = "v2.0.0-simplified"; // 极简：无种子、无导出/复制
-let   BUILD_SHA256 = "auto"; // "auto" 时运行时计算
+/* ========= 版本与构建 ========= */
+const APP_VERSION = "v2.1.0-simplified-clean";
+let   BUILD_SHA256 = ""; // 初始化时计算一次并固定
 const __appendVersionToCommit = true;
 
-async function runtimePageSHA256(){
-  try{
-    const html = document.documentElement.outerHTML;
-    const enc = new TextEncoder();
-    const buf = await crypto.subtle.digest("SHA-256", enc.encode(html));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-  }catch{ return "runtime-hash-unavailable"; }
+async function sha256Hex(s){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function computeBuildHashOnce(){
+  if (BUILD_SHA256) return BUILD_SHA256;
+  const html = document.documentElement.outerHTML;
+  BUILD_SHA256 = await sha256Hex(html);
+  return BUILD_SHA256;
+}
+function cryptoNonceHex(bytes=16){
+  const u = new Uint8Array(bytes); crypto.getRandomValues(u);
+  return Array.from(u).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
 /* ========= RNG ========= */
-// 强随机：每次取样直接用 crypto
 function cryptoRng(){
   const u32 = new Uint32Array(1);
-  return () => { crypto.getRandomValues(u32); return (u32[0] >>> 0) / 2 ** 32; };
+  return () => { crypto.getRandomValues(u32); return (u32[0]>>>0)/2**32; };
 }
-// 自检用快速 PRNG（种子来自 crypto，但不对外暴露）
-function mulberry32(seed) {
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6D2B79F5;
-    let r = Math.imul(t ^ (t >>> 15), 1 | t);
-    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
-    return ((r ^ (r >>> 14)) >>> 0) / 2 ** 32;
-  };
-}
-function newSeed32(){ const u = new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
+// 自检用快速 PRNG（种子来自 crypto，仅内部使用）
+function mulberry32(seed){ let t=seed>>>0; return ()=>{ t+=0x6D2B79F5; let r=Math.imul(t^(t>>>15),1|t); r^=r+Math.imul(r^(r>>>7),61|r); return((r^(r>>>14))>>>0)/2**32; }; }
+function newSeed32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
 
 /* ========= 写实分堆（严格三变） ========= */
-function rem4NonZero(x){ const r = x % 4; return r===0?4:r; }
-function splitNonZero(total, rng){
-  const A = randIntInclusive(rng, 1, total-1); // A∈[1,total-1]
-  return [A, total-A];
+function rem4NonZero(x){ const r=x%4; return r===0?4:r; }
+function splitNonZero(total,rng){
+  const A = randIntInclusive(rng,1,total-1); // A∈[1,total-1]
+  return [A,total-A];
 }
-function firstChange(n, rng){
-  const [A,B] = splitNonZero(n, rng);
-  const leftRem  = rem4NonZero(A);
-  const rightRem = rem4NonZero(B-1); // 先挂一
-  const taken = 1 + leftRem + rightRem; // 5 或 9
-  const after = n - taken;
-  return {after, step:{from:n,to:after,A,B,leftRem,rightRem,taken}};
+function firstChange(n,rng){
+  const [A,B] = splitNonZero(n,rng);
+  const L = rem4NonZero(A);
+  const R = rem4NonZero(B-1); // 先挂一
+  const taken = 1 + L + R;    // 5 或 9
+  return {after:n-taken, step:{from:n,to:n-taken,A,B,leftRem:L,rightRem:R,taken}};
 }
-function nextChange(n, rng){
-  const [A,B] = splitNonZero(n, rng);
-  const leftRem  = rem4NonZero(A);
-  const rightRem = rem4NonZero(B);
-  const taken = leftRem + rightRem; // 4 或 8
-  const after = n - taken;
-  return {after, step:{from:n,to:after,A,B,leftRem,rightRem,taken}};
+function nextChange(n,rng){
+  const [A,B] = splitNonZero(n,rng);
+  const L = rem4NonZero(A);
+  const R = rem4NonZero(B);
+  const taken = L + R;        // 4 或 8
+  return {after:n-taken, step:{from:n,to:n-taken,A,B,leftRem:L,rightRem:R,taken}};
 }
 function remainingToLine(n){
   if(n===24) return 6;
@@ -198,29 +193,24 @@ function remainingToLine(n){
   throw new Error("Unexpected remainder: "+n);
 }
 function genLineYarrow(rng){
-  let n = 49; const steps = [];
-  const t1 = firstChange(n, rng); steps.push({idx:1,...t1.step}); n = t1.after;
-  const t2 = nextChange(n, rng);  steps.push({idx:2,...t2.step}); n = t2.after;
-  const t3 = nextChange(n, rng);  steps.push({idx:3,...t3.step}); n = t3.after;
-  const value = remainingToLine(n);
-  return { value, remainder:n, steps };
+  let n=49; const steps=[];
+  const t1=firstChange(n,rng); steps.push({idx:1,...t1.step}); n=t1.after;
+  const t2=nextChange(n,rng);  steps.push({idx:2,...t2.step}); n=t2.after;
+  const t3=nextChange(n,rng);  steps.push({idx:3,...t3.step}); n=t3.after;
+  return { value:remainingToLine(n), remainder:n, steps };
 }
 function genHexYarrow(rng){
-  const lines = []; const detail=[];
-  for (let i=0;i<6;i++){ const r = genLineYarrow(rng); lines.push(r.value); detail.push({line:i+1, ...r}); }
+  const lines=[], detail=[];
+  for(let i=0;i<6;i++){ const r=genLineYarrow(rng); lines.push(r.value); detail.push({line:i+1,...r}); }
   return { lines, detail };
 }
 
 /* ========= 卦运算 ========= */
 function isYang(v){ return v===7 || v===9; }
-function isMoving(v){ return v===6 || v===9; }
 function toBinary(lines){ return lines.map(v=>isYang(v)?1:0); } // 底→顶
 function relatingFrom(lines){
   const out = lines.slice();
-  for(let i=0;i<6;i++){
-    if (lines[i]===6) out[i]=7; // 6→阳
-    else if (lines[i]===9) out[i]=8; // 9→阴
-  }
+  for(let i=0;i<6;i++){ if(lines[i]===6) out[i]=7; else if(lines[i]===9) out[i]=8; }
   return out;
 }
 function nuclearFromBinary(b){ return [b[1],b[2],b[3], b[2],b[3],b[4]]; }
@@ -229,80 +219,38 @@ function oppositeFromBinary(b){ return b.map(x=>x?0:1); }
 
 /* ========= 八卦（组三）& 64卦映射 ========= */
 const TRIS = {
-  "111": {zh:"乾",sym:"☰"}, "110": {zh:"兑",sym:"☱"}, "101": {zh:"离",sym:"☲"}, "100": {zh:"震",sym:"☳"},
-  "011": {zh:"巽",sym:"☴"}, "010": {zh:"坎",sym:"☵"}, "001": {zh:"艮",sym:"☶"}, "000": {zh:"坤",sym:"☷"},
+  "111":{zh:"乾",sym:"☰"}, "110":{zh:"兑",sym:"☱"}, "101":{zh:"离",sym:"☲"}, "100":{zh:"震",sym:"☳"},
+  "011":{zh:"巽",sym:"☴"}, "010":{zh:"坎",sym:"☵"}, "001":{zh:"艮",sym:"☶"}, "000":{zh:"坤",sym:"☷"},
 };
-function triNameOf(b3){ const key = b3.join(""); return TRIS[key] ? `${TRIS[key].sym}${TRIS[key].zh}` : key; }
-function trisOf(bin){ const lower = bin.slice(0,3), upper = bin.slice(3,6); return { lower, upper }; }
+function triNameOf(b3){ const k=b3.join(""); return TRIS[k]?`${TRIS[k].sym}${TRIS[k].zh}`:k; }
+function trisOf(bin){ const lower=bin.slice(0,3), upper=bin.slice(3,6); return {lower,upper}; }
 
 const HEX64 = {
-  "111111": { no:1,  zh:"乾",   full:"乾为天" },
-  "000000": { no:2,  zh:"坤",   full:"坤为地" },
-  "100010": { no:3,  zh:"屯",   full:"水雷屯" },
-  "010001": { no:4,  zh:"蒙",   full:"山水蒙" },
-  "111010": { no:5,  zh:"需",   full:"水天需" },
-  "010111": { no:6,  zh:"讼",   full:"天水讼" },
-  "010000": { no:7,  zh:"师",   full:"地水师" },
-  "000010": { no:8,  zh:"比",   full:"水地比" },
-  "111011": { no:9,  zh:"小畜", full:"风天小畜" },
-  "110111": { no:10, zh:"履",   full:"天泽履" },
-  "111000": { no:11, zh:"泰",   full:"地天泰" },
-  "000111": { no:12, zh:"否",   full:"天地否" },
-  "101111": { no:13, zh:"同人", full:"天火同人" },
-  "111101": { no:14, zh:"大有", full:"火天大有" },
-  "001000": { no:15, zh:"谦",   full:"地山谦" },
-  "000100": { no:16, zh:"豫",   full:"雷地豫" },
-  "100110": { no:17, zh:"随",   full:"泽雷随" },
-  "011001": { no:18, zh:"蛊",   full:"山风蛊" },
-  "110000": { no:19, zh:"临",   full:"地泽临" },
-  "000011": { no:20, zh:"观",   full:"风地观" },
-  "100101": { no:21, zh:"噬嗑", full:"火雷噬嗑" },
-  "101001": { no:22, zh:"贲",   full:"山火贲" },
-  "000001": { no:23, zh:"剥",   full:"山地剥" },
-  "100000": { no:24, zh:"复",   full:"地雷复" },
-  "100111": { no:25, zh:"无妄", full:"天雷无妄" },
-  "111001": { no:26, zh:"大畜", full:"山天大畜" },
-  "100001": { no:27, zh:"颐",   full:"山雷颐" },
-  "011110": { no:28, zh:"大过", full:"泽风大过" },
-  "010010": { no:29, zh:"坎",   full:"坎为水" },
-  "101101": { no:30, zh:"离",   full:"离为火" },
-  "001110": { no:31, zh:"咸",   full:"泽山咸" },
-  "011100": { no:32, zh:"恒",   full:"雷风恒" },
-  "001111": { no:33, zh:"遯",   full:"天山遯" },
-  "111100": { no:34, zh:"大壮", full:"雷天大壮" },
-  "000101": { no:35, zh:"晋",   full:"火地晋" },
-  "101000": { no:36, zh:"明夷", full:"地火明夷" },
-  "101011": { no:37, zh:"家人", full:"风火家人" },
-  "110101": { no:38, zh:"睽",   full:"火泽睽" },
-  "001010": { no:39, zh:"蹇",   full:"水山蹇" },
-  "010100": { no:40, zh:"解",   full:"雷水解" },
-  "110001": { no:41, zh:"损",   full:"山泽损" },
-  "100011": { no:42, zh:"益",   full:"风雷益" },
-  "111110": { no:43, zh:"夬",   full:"泽天夬" },
-  "011111": { no:44, zh:"姤",   full:"天风姤" },
-  "000110": { no:45, zh:"萃",   full:"泽地萃" },
-  "011000": { no:46, zh:"升",   full:"地风升" },
-  "010110": { no:47, zh:"困",   full:"泽水困" },
-  "011010": { no:48, zh:"井",   full:"水风井" },
-  "101110": { no:49, zh:"革",   full:"泽火革" },
-  "011101": { no:50, zh:"鼎",   full:"火风鼎" },
-  "100100": { no:51, zh:"震",   full:"震为雷" },
-  "001001": { no:52, zh:"艮",   full:"艮为山" },
-  "001011": { no:53, zh:"渐",   full:"风山渐" },
-  "110100": { no:54, zh:"归妹", full:"雷泽归妹" },
-  "101100": { no:55, zh:"丰",   full:"雷火丰" },
-  "001101": { no:56, zh:"旅",   full:"火山旅" },
-  "011011": { no:57, zh:"巽",   full:"巽为风" },
-  "110110": { no:58, zh:"兑",   full:"兑为泽" },
-  "010011": { no:59, zh:"涣",   full:"风水涣" },
-  "110010": { no:60, zh:"节",   full:"水泽节" },
-  "110011": { no:61, zh:"中孚", full:"风泽中孚" },
-  "001100": { no:62, zh:"小过", full:"雷山小过" },
-  "101010": { no:63, zh:"既济", full:"水火既济" },
-  "010101": { no:64, zh:"未济", full:"火水未济" },
+  "111111":{no:1,zh:"乾",full:"乾为天"},"000000":{no:2,zh:"坤",full:"坤为地"},"100010":{no:3,zh:"屯",full:"水雷屯"},
+  "010001":{no:4,zh:"蒙",full:"山水蒙"},"111010":{no:5,zh:"需",full:"水天需"},"010111":{no:6,zh:"讼",full:"天水讼"},
+  "010000":{no:7,zh:"师",full:"地水师"},"000010":{no:8,zh:"比",full:"水地比"},"111011":{no:9,zh:"小畜",full:"风天小畜"},
+  "110111":{no:10,zh:"履",full:"天泽履"},"111000":{no:11,zh:"泰",full:"地天泰"},"000111":{no:12,zh:"否",full:"天地否"},
+  "101111":{no:13,zh:"同人",full:"天火同人"},"111101":{no:14,zh:"大有",full:"火天大有"},"001000":{no:15,zh:"谦",full:"地山谦"},
+  "000100":{no:16,zh:"豫",full:"雷地豫"},"100110":{no:17,zh:"随",full:"泽雷随"},"011001":{no:18,zh:"蛊",full:"山风蛊"},
+  "110000":{no:19,zh:"临",full:"地泽临"},"000011":{no:20,zh:"观",full:"风地观"},"100101":{no:21,zh:"噬嗑",full:"火雷噬嗑"},
+  "101001":{no:22,zh:"贲",full:"山火贲"},"000001":{no:23,zh:"剥",full:"山地剥"},"100000":{no:24,zh:"复",full:"地雷复"},
+  "100111":{no:25,zh:"无妄",full:"天雷无妄"},"111001":{no:26,zh:"大畜",full:"山天大畜"},"100001":{no:27,zh:"颐",full:"山雷颐"},
+  "011110":{no:28,zh:"大过",full:"泽风大过"},"010010":{no:29,zh:"坎",full:"坎为水"},"101101":{no:30,zh:"离",full:"离为火"},
+  "001110":{no:31,zh:"咸",full:"泽山咸"},"011100":{no:32,zh:"恒",full:"雷风恒"},"001111":{no:33,zh:"遯",full:"天山遯"},
+  "111100":{no:34,zh:"大壮",full:"雷天大壮"},"000101":{no:35,zh:"晋",full:"火地晋"},"101000":{no:36,zh:"明夷",full:"地火明夷"},
+  "101011":{no:37,zh:"家人",full:"风火家人"},"110101":{no:38,zh:"睽",full:"火泽睽"},"001010":{no:39,zh:"蹇",full:"水山蹇"},
+  "010100":{no:40,zh:"解",full:"雷水解"},"110001":{no:41,zh:"损",full:"山泽损"},"100011":{no:42,zh:"益",full:"风雷益"},
+  "111110":{no:43,zh:"夬",full:"泽天夬"},"011111":{no:44,zh:"姤",full:"天风姤"},"000110":{no:45,zh:"萃",full:"泽地萃"},
+  "011000":{no:46,zh:"升",full:"地风升"},"010110":{no:47,zh:"困",full:"泽水困"},"011010":{no:48,zh:"井",full:"水风井"},
+  "101110":{no:49,zh:"革",full:"泽火革"},"011101":{no:50,zh:"鼎",full:"火风鼎"},"100100":{no:51,zh:"震",full:"震为雷"},
+  "001001":{no:52,zh:"艮",full:"艮为山"},"001011":{no:53,zh:"渐",full:"风山渐"},"110100":{no:54,zh:"归妹",full:"雷泽归妹"},
+  "101100":{no:55,zh:"丰",full:"雷火丰"},"001101":{no:56,zh:"旅",full:"火山旅"},"011011":{no:57,zh:"巽",full:"巽为风"},
+  "110110":{no:58,zh:"兑",full:"兑为泽"},"010011":{no:59,zh:"涣",full:"风水涣"},"110010":{no:60,zh:"节",full:"水泽节"},
+  "110011":{no:61,zh:"中孚",full:"风泽中孚"},"001100":{no:62,zh:"小过",full:"雷山小过"},"101010":{no:63,zh:"既济",full:"水火既济"},
+  "010101":{no:64,zh:"未济",full:"火水未济"},
 };
-function hexInfoOf(bin){ const key = Array.isArray(bin)?bin.join(""):String(bin); return HEX64[key]||null; }
-function hexLabel(bin){ const i = hexInfoOf(bin); return i ? `${i.no}. ${i.full}「${i.zh}」` : `未收录（${Array.isArray(bin)?bin.join(""):bin}）`; }
+function hexInfoOf(bin){ const k=Array.isArray(bin)?bin.join(""):String(bin); return HEX64[k]||null; }
+function hexLabel(bin){ const i=hexInfoOf(bin); return i?`${i.no}. ${i.full}「${i.zh}」`:`未收录（${Array.isArray(bin)?bin.join(""):bin}）`; }
 
 /* ========= UI ========= */
 const $ = s=>document.querySelector(s);
@@ -313,135 +261,107 @@ const elN=$("#N"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn")
 const aboutBtn=$("#aboutBtn"), aboutModal=$("#aboutModal"), aboutClose=$("#aboutClose"), aboutVer=$("#aboutVer"), verpill=$("#verpill");
 const elLabelMain=$("#labelMain"), elLabelRel=$("#labelRel");
 
-function renderLines(container, lines){
-  container.innerHTML = "";
-  const visual = lines.slice().reverse(); // 视觉顶→底
-  visual.forEach((v)=>{
-    const row = document.createElement("div"); row.className="one-line";
-    const isY = (v===7||v===9), moving = (v===6||v===9);
-    if (isY){ const bar=document.createElement("div"); bar.className="yang"; row.appendChild(bar); }
+function renderLines(container,lines){
+  container.innerHTML="";
+  const visual=lines.slice().reverse(); // 视觉顶→底
+  visual.forEach(v=>{
+    const row=document.createElement("div"); row.className="one-line";
+    const isY=(v===7||v===9), moving=(v===6||v===9);
+    if(isY){ const bar=document.createElement("div"); bar.className="yang"; row.appendChild(bar); }
     else{ const yin=document.createElement("div"); yin.className="yin";
-          const s1=document.createElement("div"); s1.className="seg";
-          const gap=document.createElement("div"); gap.className="gap";
-          const s2=document.createElement("div"); s2.className="seg";
-          yin.append(s1,gap,s2); row.appendChild(yin); }
-    const lab = document.createElement("div"); lab.className="small mono"; lab.textContent=String(v);
-    if (moving){ const t=document.createElement("span"); t.className="tag"; t.textContent="动"; lab.appendChild(t); }
+      const s1=document.createElement("div"); s1.className="seg";
+      const gap=document.createElement("div"); gap.className="gap";
+      const s2=document.createElement("div"); s2.className="seg";
+      yin.append(s1,gap,s2); row.appendChild(yin); }
+    const lab=document.createElement("div"); lab.className="small mono"; lab.textContent=String(v);
+    if(moving){ const t=document.createElement("span"); t.className="tag"; t.textContent="动"; lab.appendChild(t); }
     row.appendChild(lab); container.appendChild(row);
   });
 }
-function renderTris(el, bin){
-  const {lower, upper} = trisOf(bin);
-  el.textContent = `下卦：${triNameOf(lower)}　上卦：${triNameOf(upper)}　（二进制 底→顶：${bin.join("")})`;
+function renderTris(el,bin){
+  const {lower,upper}=trisOf(bin);
+  el.textContent=`下卦：${triNameOf(lower)}　上卦：${triNameOf(upper)}　（二进制 底→顶：${bin.join("")})`;
 }
-function renderMore(el, bMain){
-  const bNuc = nuclearFromBinary(bMain);
-  const bOpp = oppositeFromBinary(bMain);
-  const bInv = invertedFromBinary(bMain);
-  const line = (label, b)=>{
-    const {lower, upper} = trisOf(b);
-    const tri = `${triNameOf(lower)}/${triNameOf(upper)}`;
-    const bin = b.join("");
-    return `${label}：${tri}  ${bin} ｜ ${hexLabel(b)}`;
-  };
-  el.textContent = [ line("互卦", bNuc), line("错卦", bOpp), line("综卦", bInv) ].join("\n");
+function renderMore(el,bMain){
+  const bNuc=nuclearFromBinary(bMain), bOpp=oppositeFromBinary(bMain), bInv=invertedFromBinary(bMain);
+  const line=(label,b)=>`${label}：${triNameOf(b.slice(0,3))}/${triNameOf(b.slice(3,6))}  ${b.join("")} ｜ ${hexLabel(b)}`;
+  el.textContent=[ line("互卦",bNuc), line("错卦",bOpp), line("综卦",bInv) ].join("\n");
 }
-function renderDetail(el, detail){
-  const obj = detail.map(d => ({
-    爻位: d.line, 值: d.value, 余数终值: d.remainder,
-    三变: d.steps.map(s => ({ 变序:s.idx, 从:s.from, 到:s.to, A:s.A, B:s.B, 左余:s.leftRem, 右余:s.rightRem, 取走:s.taken }))
-  }));
-  el.textContent = JSON.stringify(obj, null, 2);
-}
-
-/* ========= 杂项 ========= */
-async function sha256Hex(s){
-  const enc=new TextEncoder(); const buf=await crypto.subtle.digest("SHA-256", enc.encode(s));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+function renderDetail(el,detail){
+  const obj=detail.map(d=>({ 爻位:d.line, 值:d.value, 余数终值:d.remainder,
+    三变:d.steps.map(s=>({ 变序:s.idx, 从:s.from, 到:s.to, A:s.A, B:s.B, 左余:s.leftRem, 右余:s.rightRem, 取走:s.taken })) }));
+  el.textContent=JSON.stringify(obj,null,2);
 }
 
 /* ========= 起卦 ========= */
 async function castOnce(){
-  if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256();
+  await computeBuildHashOnce();
 
-  // 强随机 RNG
-  const rng = cryptoRng();
-  const startEntropy = (performance.now()+"|"+Math.random()).toString();
+  const rng=cryptoRng();
+  const nonceHex=cryptoNonceHex(16); // 加密随机 nonce
+  const res=genHexYarrow(rng);
+  const binMain=toBinary(res.lines);
+  const linesRel=relatingFrom(res.lines);
+  const binRel=toBinary(linesRel);
 
-  // 生成卦与衍生
-  const res = genHexYarrow(rng);
-  const binMain = toBinary(res.lines);
-  const linesRel = relatingFrom(res.lines);
-  const binRel  = toBinary(linesRel);
+  renderLines(elMain,res.lines);
+  renderLines(elRel,linesRel);
+  renderTris(elTriM,binMain);
+  renderTris(elTriR,binRel);
+  renderMore(elMore,binMain);
+  renderDetail(elDet,res.detail);
+  elRes.style.display="block";
 
-  renderLines(elMain, res.lines);
-  renderLines(elRel, linesRel);
-  renderTris(elTriM, binMain);
-  renderTris(elTriR, binRel);
-  renderMore(elMore, binMain);
-  renderDetail(elDet, res.detail);
-  elRes.style.display = "block";
+  // 标题显示 64卦名
+  if(elLabelMain) elLabelMain.textContent=`本卦：`+hexLabel(binMain);
+  if(elLabelRel)  elLabelRel.textContent =`之卦：`+hexLabel(binRel);
 
-  // 标题展示 64卦卦名
-  if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
-  if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
-
-  // VRS（标记本次运行；不用于复现）
-  const commitBase = `rng:crypto|n:${Date.now()}|e:${startEntropy}`;
-  const commitStr = __appendVersionToCommit ? (commitBase+"|"+APP_VERSION+"|"+BUILD_SHA256) : commitBase;
-  const commit = await sha256Hex(commitStr);
-  elVRS.textContent = commit.slice(0,16)+"…";
-
-  // 内部状态（不导出、不复制）
-  window.__lastCast = { commit, version:APP_VERSION, build:BUILD_SHA256, lines:res.lines, detail:res.detail, relating:linesRel };
+  // VRS：仅作标记（不可复现）
+  const commitStr = __appendVersionToCommit
+    ? `rng:crypto|nonce:${nonceHex}|${APP_VERSION}|${BUILD_SHA256}`
+    : `rng:crypto|nonce:${nonceHex}`;
+  elVRS.textContent=(await sha256Hex(commitStr)).slice(0,16)+"…";
 }
 
 /* ========= 自检（趋势化 + 经验基准，仅参考） ========= */
-function pct(n, d){ return (n/d*100).toFixed(3)+"%"; }
-
-$("#selftest").addEventListener("click", ()=>{
-  const N = Math.max(1000, parseInt(elN.value,10)||100000);
-
-  // 用快速 PRNG，种子来自 crypto（不可复现，但速度好）
-  const rng = mulberry32(newSeed32());
-
-  const cnt = {6:0,7:0,8:0,9:0};
-  for (let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
-
-  elStat.textContent =
+function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
+$("#selftest").addEventListener("click",()=>{
+  const N=Math.max(1000,parseInt(elN.value,10)||100000);
+  const rng=mulberry32(newSeed32());
+  const cnt={6:0,7:0,8:0,9:0};
+  for(let i=0;i<N;i++){ const {value}=genLineYarrow(rng); cnt[value]++; }
+  elStat.textContent=
     `样本数 N = ${N}\n`+
     `计数：${JSON.stringify(cnt)}\n`+
     `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
-    `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}（A 等可能长期模拟）`;
-
-  const trendOK = (cnt[9] >= cnt[8]) && (cnt[8] > cnt[7]) && (cnt[7] > cnt[6]);
-  elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
-
+    `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
+  const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
+  elStat.textContent+=`\n经验趋势检查：${trendOK?"符合长期趋势（9≥8≫7>6）":"与长期趋势不一致（可能样本偏小或随机波动）"}`;
   elCheck.style.display="block";
-  elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000 以稳定观测。" : "";
+  elWarn.textContent=(N<50000)?"提示：样本量较小，波动较大；建议 ≥ 100000。":"";
 });
 
 /* ========= 事件 ========= */
-$("#cast").addEventListener("click", castOnce);
+$("#cast").addEventListener("click",castOnce);
 $("#aboutBtn").addEventListener("click", async ()=>{
-  if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256();
-  aboutVer.textContent = APP_VERSION+" · "+(BUILD_SHA256?BUILD_SHA256.slice(0,8)+"…":"");
+  await computeBuildHashOnce();
+  aboutVer.textContent=APP_VERSION+" · "+(BUILD_SHA256?BUILD_SHA256.slice(0,8)+"…":"");
   aboutModal.style.display="block";
   setTimeout(()=>document.getElementById("aboutBox").focus(),0);
 });
-$("#aboutClose").addEventListener("click", ()=> closeAbout());
-aboutModal.addEventListener("click", (e)=>{ if(e.target===aboutModal) closeAbout(); });
-document.addEventListener("keydown", (e)=>{ if (aboutModal.style.display==="block" && e.key==="Escape"){ closeAbout(); }});
+$("#aboutClose").addEventListener("click",()=>closeAbout());
+aboutModal.addEventListener("click",(e)=>{ if(e.target===aboutModal) closeAbout(); });
+document.addEventListener("keydown",(e)=>{ if(aboutModal.style.display==="block" && e.key==="Escape") closeAbout(); });
 function closeAbout(){ aboutModal.style.display="none"; $("#aboutBtn")?.focus(); }
 
-/* ========= 初始版本条 ========= */
-(async function initVersionBar(){
-  if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256();
-  const bar = document.createElement("div");
-  bar.style.cssText = "margin-top:10px;color:#6b7280;font-size:12px";
-  bar.textContent = `版本：${APP_VERSION} · build ${ (BUILD_SHA256||"").slice(0,8) }…`;
+/* ========= 初始化版本条（一次性计算构建哈希） ========= */
+(async function init(){
+  await computeBuildHashOnce();
+  const bar=document.createElement("div");
+  bar.style.cssText="margin-top:10px;color:#6b7280;font-size:12px";
+  bar.textContent=`版本：${APP_VERSION} · build ${ (BUILD_SHA256||"").slice(0,8) }…`;
   document.querySelector(".wrap")?.appendChild(bar);
-  if (verpill) verpill.textContent = APP_VERSION+" · "+(BUILD_SHA256||"");
+  if(verpill) verpill.textContent=APP_VERSION+" · "+(BUILD_SHA256||"");
 })();
 </script>
 </body>
