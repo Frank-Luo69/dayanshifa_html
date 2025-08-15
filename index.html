@@ -161,12 +161,19 @@
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
     <div class="hr"></div>
+    <!-- ★ 文案已按朱熹法更新：静卦“内贞外悔”，三爻变自动“前十/后十” ★ -->
     <div class="small muted">
-      参考口径（据《易学启蒙》占法的通行整理）：<br>
-      ① 六爻静：读<b>本卦卦辞</b>（并可参《大象》）；② 一爻动：读<b>本卦动爻之爻辞</b>；③ 二爻动：读<b>本卦两动爻爻辞</b>，以上爻为主；④ 三爻动：读<b>本卦与之卦卦辞</b>（常称“本卦为贞、之卦为悔”；不自动细分“前十/后十”以避免误导）；⑤ 四爻动：读<b>之卦中两静爻爻辞</b>，以下爻为主；⑥ 五爻动：读<b>之卦中唯一静爻爻辞</b>；⑦ 六爻皆动：<b>本卦为乾/坤时取“用九/用六”</b>，其余取<b>之卦卦辞</b>。
+      参考口径（朱熹·《易学启蒙·考变占》要点）：<br>
+      ① 六爻静：读<b>本卦卦辞</b>（并参《大象》）；同时可按<b>“内卦为贞、外卦为悔”</b>提示内外取向。<br>
+      ② 一爻动：读<b>本卦动爻之爻辞</b>；<br>
+      ③ 二爻动：读<b>本卦两动爻爻辞</b>，以上爻为主；<br>
+      ④ 三爻动：读<b>本卦与之卦卦辞</b>，并<b>自动细分“前十/后十”</b>：动爻<b>含初爻</b>→前十→<b>本卦为贞</b>；不含初→后十→<b>之卦为悔</b>；<br>
+      ⑤ 四爻动：读<b>之卦中两静爻爻辞</b>，以下爻为主；<br>
+      ⑥ 五爻动：读<b>之卦中唯一静爻爻辞</b>；<br>
+      ⑦ 六爻皆动：<b>本卦为乾/坤时取“用九/用六”</b>，其余取<b>之卦卦辞</b>。<br>
+      （当前仅提供朱熹法；后续可扩展王弼义理、京房纳甲等）
     </div>
     <div class="hr"></div>
-    <div class="small muted">（后续可扩展流派：王弼义理、京房纳甲等——当前仅提供朱熹法）</div>
     <div style="text-align:right;margin-top:10px">
       <button class="btn small" id="methodClose">关闭</button>
     </div>
@@ -175,7 +182,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.7.0-interactive-bottomup-audit";
+const APP_VERSION = "v3.8.0-zhuxi-update";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -318,7 +325,7 @@ function renderMore(el,bMain){
 /* ========= 交互状态 ========= */
 const state = {
   rng: cryptoRng(),
-  sessionNonce: "", // 每次“开始一卦”生成
+  sessionNonce: "",
   lines: [],        // 已成爻（底→顶）
   hexDetail: [],    // 每爻三变明细
   curr: null,       // { n, stepIdx(1..3), steps:[] }
@@ -377,13 +384,11 @@ function doOneSplit(){
   state.curr.stepIdx++;
 
   if (state.curr.stepIdx===4){
-    // 运行期断言：三变后 n 必须是 24/28/32/36
     if (![24,28,32,36].includes(state.curr.n)){
       elStatus.innerHTML = `<span class="warn">分堆异常：剩余 n=${state.curr.n}（应为 24/28/32/36）。请点击“重开”。</span>`;
       elSplit.disabled = true; elNextLine.disabled = true;
       return;
     }
-    // 三变完成，得到一爻
     const value = remainingToLine(state.curr.n);
     state.lines.push(value);
     state.hexDetail.push({ line: state.lines.length, value, remainder: state.curr.n, steps: state.curr.steps.slice() });
@@ -392,7 +397,6 @@ function doOneSplit(){
     elStatus.innerHTML = `第 ${state.lines.length} 爻已成：<b>${value}</b>（${(value===7||value===9)?"阳":"阴"}${(value===6||value===9)?"·动":""}）。`;
     state.curr = null;
 
-    // 下一步：下一爻 or 完成全卦
     elSplit.disabled = true;
     if (state.lines.length < 6){
       elNextLine.disabled = false;
@@ -408,7 +412,6 @@ function doOneSplit(){
 }
 
 async function finishHex(){
-  // 计算与渲染
   const binMain = toBinary(state.lines);
   const relating = relatingFrom(state.lines);
   const binRel  = toBinary(relating);
@@ -428,14 +431,13 @@ async function finishHex(){
 
   state.finished = true;
 
-  // VRS：对本卦全过程做承诺（加入时间戳，不提供复现导出）
   await computeBuildHashOnce();
   const epochMs = Date.now();
   const bodyHash = await sha256Hex(JSON.stringify({lines:state.lines, detail:state.hexDetail}));
   const commitStr = (__appendVersionToCommit ? `${APP_VERSION}|${BUILD_SHA256}|` : "") + `nonce:${state.sessionNonce}|t:${epochMs}|body:${bodyHash}`;
   elVRS.textContent = (await sha256Hex(commitStr)).slice(0,16)+"…";
 
-  methodBtn.disabled = false; // 可打开“解卦方式”
+  methodBtn.disabled = false;
   elStatus.innerHTML = `<span class="ok">全卦完成。</span> 右侧可查看“本卦/之卦/互错综”的卦名与结构；需按朱熹法判读请点“解卦方式”。`;
 }
 
@@ -443,7 +445,7 @@ async function finishHex(){
 function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
 document.getElementById("selftest").addEventListener("click", ()=>{
   const N = Math.max(1000, parseInt(elN.value,10)||100000);
-  const rng = mulberry32(newSeed32()); // 速度优先；种子源自 crypto
+  const rng = mulberry32(newSeed32());
   const cnt = {6:0,7:0,8:0,9:0};
   for(let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
   elStat.textContent =
@@ -467,68 +469,86 @@ document.addEventListener("keydown",(e)=>{ if(guideModal.style.display==="block"
 
 /* ========= 解卦方式（朱熹） ========= */
 function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; } // 1..6（底→顶）
-function isAllYang(lines){ return lines.every(v=> (v===7||v===9) ); }
-function isAllYin(lines){ return lines.every(v=> (v===6||v===8) ); }
-
 function zhuXiAdvice(lines){
   const mov = movingIndices(lines); const m = mov.length;
   const mainBin = toBinary(lines);
-  const relate = relatingFrom(lines);
-  const relateBin = toBinary(relate);
-  const mainLbl = hexLabel(mainBin);
-  const relLbl  = hexLabel(relateBin);
+  const relate   = relatingFrom(lines);
+  const relateBin= toBinary(relate);
+  const mainLbl  = hexLabel(mainBin);
+  const relLbl   = hexLabel(relateBin);
 
   if (m===0){
-    return { title:"六爻皆静",
+    return {
+      title:"六爻皆静",
       read:[{type:"卦辞", which:"本卦卦辞（并可参《大象》）", hex:mainLbl}],
-      note:"朱子法：无动则“观其象而取其辞”，以本卦卦辞为主。"
+      note:"朱子法：无动则“观其象而取其辞”。并可参考提示：静卦内外取向——“内卦为贞、外卦为悔”。"
     };
   }
   if (m===1){
-    return { title:"一爻动",
+    return {
+      title:"一爻动",
       read:[{type:"爻辞", which:`本卦第 ${mov[0]} 爻的爻辞`, hex:mainLbl}],
-      note:"变者言爻，故取本卦动爻之爻辞。"
+      note:"变者言爻，取本卦动爻之辞。"
     };
   }
   if (m===2){
     const hi = Math.max(mov[0], mov[1]);
-    return { title:"二爻动",
+    return {
+      title:"二爻动",
       read:[{type:"爻辞", which:`本卦第 ${mov[0]}、第 ${mov[1]} 爻的爻辞（以上爻为主：第 ${hi} 爻）`, hex:mainLbl}],
       note:"两动取两爻之辞，并以上爻为主。"
     };
   }
   if (m===3){
-    return { title:"三爻动",
-      read:[{type:"卦辞", which:"本卦卦辞（贞）", hex:mainLbl},
-            {type:"卦辞", which:"之卦卦辞（悔）", hex:relLbl}],
-      note:"通行整理：本卦为“贞”、之卦为“悔”。关于“前十/后十”的细分历有异同，此处不自动细分。"
+    const frontTen = mov.includes(1); // 含初爻=前十；不含初爻=后十
+    const titleTail = frontTen ? "（前十：本卦为贞）" : "（后十：之卦为悔）";
+    const read = frontTen
+      ? [
+          {type:"卦辞", which:"本卦卦辞（贞）", hex:mainLbl},
+          {type:"卦辞", which:"之卦卦辞（悔）", hex:relLbl},
+        ]
+      : [
+          {type:"卦辞", which:"之卦卦辞（悔）", hex:relLbl},
+          {type:"卦辞", which:"本卦卦辞（贞）", hex:mainLbl},
+        ];
+    return {
+      title:"三爻动 " + titleTail,
+      read,
+      note:"判别法：动爻含初爻→“前十”，主本卦为贞；不含初爻→“后十”，主之卦为悔。"
     };
   }
   if (m===4){
     const stat = [1,2,3,4,5,6].filter(i=> !mov.includes(i));
     const main = Math.min(stat[0], stat[1]); // 以下爻为主
-    return { title:"四爻动",
+    return {
+      title:"四爻动",
       read:[{type:"爻辞", which:`之卦中两静爻之爻辞：第 ${stat[0]}、第 ${stat[1]} 爻（以下爻为主：第 ${main} 爻）`, hex:relLbl}],
-      note:"四动则取变卦（之卦）中二静爻之辞，以下爻为主。"
+      note:"四动取变卦（二静爻）之辞，以下爻为主。"
     };
   }
   if (m===5){
     const stat = [1,2,3,4,5,6].find(i=> !mov.includes(i));
-    return { title:"五爻动",
+    return {
+      title:"五爻动",
       read:[{type:"爻辞", which:`之卦唯一静爻之爻辞：第 ${stat} 爻`, hex:relLbl}],
       note:"五动取变卦唯一静爻之辞。"
     };
   }
   if (m===6){
-    const isQian = isAllYang(lines) && mainBin.join("")==="111111";
-    const isKun  = isAllYin(lines)  && mainBin.join("")==="000000";
-    if (isQian){ return { title:"六爻皆动（本卦为乾）",
+    const isQian = mainBin.join("")==="111111";
+    const isKun  = mainBin.join("")==="000000";
+    if (isQian){
+      return { title:"六爻皆动（本卦为乾）",
         read:[{type:"用辞", which:"乾卦『用九』", hex:"1. 乾为天"}],
-        note:"朱子法：乾坤遇六动，取“用九/用六”。" }; }
-    if (isKun){  return { title:"六爻皆动（本卦为坤）",
+        note:"朱子法特例：乾坤遇六动，取“用九/用六”。" };
+    }
+    if (isKun){
+      return { title:"六爻皆动（本卦为坤）",
         read:[{type:"用辞", which:"坤卦『用六』", hex:"2. 坤为地"}],
-        note:"朱子法：乾坤遇六动，取“用九/用六”。" }; }
-    return { title:"六爻皆动",
+        note:"朱子法特例：乾坤遇六动，取“用九/用六”。" };
+    }
+    return {
+      title:"六爻皆动",
       read:[{type:"卦辞", which:"之卦卦辞", hex:relLbl}],
       note:"非乾坤之卦，六动取之卦卦辞。"
     };
