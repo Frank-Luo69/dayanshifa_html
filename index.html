@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（交互起卦·修正版）</title>
-<meta name="description" content="严格还原：每一爻点击三次“分堆”（分二→挂一→按四取余，余0记4），六爻成卦；强随机（crypto）；显示64卦卦名；无种子、无导出。">
+<title>大衍筮法 · 写实分堆（交互起卦·无撤销）</title>
+<meta name="description" content="严格还原：每一爻点击三次“分堆”（分二→挂一→按四取余，余0记4），六爻成卦；强随机（crypto）；显示64卦卦名；无种子、无导出、无撤销。" />
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309; }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
@@ -26,7 +26,7 @@
   .yin{display:flex;justify-content:space-between;align-items:center}
   .yin .seg{height:8px;background:var(--line);width:44%} .yin .gap{width:12%}
   .tag{font-size:12px;color:#fff;background:#111;border-radius:6px;padding:1px 6px;margin-left:6px}
-  .ok{color:var(--ok)} .warn{color:var(--warn)}
+  .ok{color:var(--ok)} .warn{color:#b45309}
   pre{white-space:pre-wrap;font-size:12px;background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px;overflow:auto}
   @media (prefers-color-scheme: dark){
     :root{ --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb; }
@@ -36,7 +36,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>大衍筮法 · 写实分堆（交互起卦·修正版）</h1>
+  <h1>大衍筮法 · 写实分堆（交互起卦·无撤销）</h1>
   <p class="lead">每一爻需 <span class="mono">3 次变</span>：第1变先“挂一”，每变“分二且非空”，按四取余（余0记4）。点击三次得一爻，六爻成卦。</p>
 
   <div class="row">
@@ -49,10 +49,24 @@
         <div class="pill">版本：<span class="mono" id="verpill">—</span></div>
       </div>
 
+      <!-- 指导说明 -->
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-weight:600;margin-bottom:6px">指导说明</div>
+        <ol class="small" style="margin:0 0 6px 18px; padding:0; line-height:1.6">
+          <li>点击<b>开始一卦</b>。</li>
+          <li>每一爻需<b>三次</b>点击<b>分堆一次（下一变）</b>：
+            第1变会先<b>挂一</b>，每变都按四取余（余0记4）。</li>
+          <li>三变完成即得到该爻（6/7/8/9）。随后点击<b>开始下一爻</b>，直到凑满六爻。</li>
+          <li>本版<b>不支持撤销</b>；若需重来，请点<b>重开</b>。</li>
+          <li>完成六爻后，右侧会显示：本卦/之卦/互卦/错卦/综卦与对应的<b>64卦卦名</b>。</li>
+          <li>采用<b>强随机</b>；不提供种子、导出、复制。</li>
+        </ol>
+        <div class="small muted">提示：下方“当前爻”区域会实时展示每一步的 A/B 分堆、取余与剩余。</div>
+      </div>
+
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px" role="group" aria-label="交互控制">
         <button class="btn" id="startHex">开始一卦</button>
         <button class="btn" id="splitOnce" disabled>分堆一次（下一变）</button>
-        <button class="btn secondary" id="undoStep" disabled>撤销一步</button>
         <button class="btn secondary" id="nextLine" disabled>开始下一爻</button>
         <button class="btn secondary" id="resetAll">重开</button>
       </div>
@@ -100,7 +114,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.0.1-interactive-fixed";
+const APP_VERSION = "v3.2.0-interactive-noundo";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -189,7 +203,7 @@ function hexLabel(bin){ const i=hexInfoOf(bin); return i?`${i.no}. ${i.full}「$
 
 /* ========= UI 获取 ========= */
 const $ = s=>document.querySelector(s);
-const elStart=$("#startHex"), elSplit=$("#splitOnce"), elUndo=$("#undoStep"), elNextLine=$("#nextLine"), elReset=$("#resetAll");
+const elStart=$("#startHex"), elSplit=$("#splitOnce"), elNextLine=$("#nextLine"), elReset=$("#resetAll");
 const elStatus=$("#status");
 const elCurrInfo=$("#currInfo"), elCurrDetail=$("#currDetail");
 const elBuilt=$("#builtLines"), elBuiltText=$("#builtText");
@@ -216,7 +230,7 @@ function renderLines(container, lines){
 function renderBuilt(lines){
   elBuilt.innerHTML="";
   if(!lines.length){ elBuiltText.textContent="尚无成爻。"; return; }
-  // 修正：真正的“从下到上”顺序（不再倒序）
+  // 从下到上（不倒序）
   lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
   elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下到上：${lines.join(", ")}）`;
 }
@@ -254,7 +268,7 @@ function resetAll(){
   elTriM.textContent = elTriR.textContent = "";
   elLabelMain.textContent="本卦"; elLabelRel.textContent="之卦";
   renderBuilt(state.lines);
-  elSplit.disabled = elUndo.disabled = elNextLine.disabled = true;
+  elSplit.disabled = elNextLine.disabled = true;
 }
 
 function startHex(){
@@ -269,7 +283,7 @@ function startHex(){
 function startNewLine(){
   state.curr = { n:49, stepIdx:1, steps:[] };
   updateCurrUI();
-  elSplit.disabled = false; elUndo.disabled = true; elNextLine.disabled = true;
+  elSplit.disabled = false; elNextLine.disabled = true;
 }
 
 function updateCurrUI(){
@@ -290,8 +304,6 @@ function doOneSplit(){
   state.curr.n = after;
   state.curr.stepIdx++;
 
-  elUndo.disabled = false;
-
   if (state.curr.stepIdx===4){
     // 三变完成，得到一爻
     const value = remainingToLine(state.curr.n);
@@ -303,7 +315,7 @@ function doOneSplit(){
     state.curr = null;
 
     // 下一步：下一爻 or 完成全卦
-    elSplit.disabled = true; elUndo.disabled = true;
+    elSplit.disabled = true;
     if (state.lines.length < 6){
       elNextLine.disabled = false;
       elCurrInfo.textContent = "本爻完成。点击“开始下一爻”。";
@@ -315,16 +327,6 @@ function doOneSplit(){
   }else{
     updateCurrUI();
   }
-}
-
-function undoOneStep(){
-  const arr = state.curr?.steps || [];
-  if(!arr.length) return;
-  const last = arr.pop();
-  state.curr.n = last.from;
-  state.curr.stepIdx--;
-  if(!arr.length) elUndo.disabled = true;
-  updateCurrUI();
 }
 
 async function finishHex(){
@@ -360,7 +362,6 @@ async function finishHex(){
 /* ========= 事件 ========= */
 elStart.addEventListener("click", ()=>{ startHex(); });
 elSplit.addEventListener("click", ()=>{ if(state.curr) doOneSplit(); });
-elUndo.addEventListener("click", ()=>{ if(state.curr) undoOneStep(); });
 elNextLine.addEventListener("click", ()=>{ if(!state.curr && state.lines.length<6) { startNewLine(); elStatus.innerHTML = `继续起卦。当前爻：第 ${state.lines.length+1} 爻（自下而上）`; } });
 elReset.addEventListener("click", ()=> resetAll());
 
