@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>大衍筮法 · 写实分堆（最终发布版）</title>
-<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型，强调真实与可审计；支持可验证随机性与分布自检（趋势+经验基准）。本卦/之卦/互卦/错卦/综卦均显示对应的64卦卦名。" />
+<title>大衍筮法 · 写实分堆（极简版）</title>
+<meta name="description" content="严格三变成一爻：分二→挂一→按四取余（余0记4）。锁定写实分堆模型；每次起卦使用强随机（crypto）。本卦/之卦/互卦/错卦/综卦均显示对应的64卦卦名。" />
 <style>
   :root { --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#000; --accent:#111; }
   *{box-sizing:border-box}
@@ -17,7 +17,7 @@
   .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
   label{display:block;color:var(--muted);font-size:13px;margin:0 0 6px}
   input,button{font:inherit}
-  input[type=text], input[type=number]{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+  input[type=number]{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
   .btn{cursor:pointer;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .btn.secondary{background:#11111110;color:var(--fg);border:1px solid #00000020}
@@ -38,7 +38,6 @@
   .kpi .pill{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;font-size:13px}
   .small{font-size:12px}
   .warn{color:#b91c1c}
-  /* modal */
   #aboutModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
   #aboutBox{max-width:640px;margin:10vh auto;background:#fff;border-radius:12px;padding:16px;outline:none}
   @media (prefers-color-scheme: dark){
@@ -49,27 +48,20 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>大衍筮法 · 写实分堆（最终发布版）</h1>
-  <p class="lead">严格“三变成一爻”：<span class="mono">分二→挂一→按四取余（余0记4）</span>。模型<strong>锁定为写实分堆（A 等可能）</strong>，强调真实与可审计；填入 Seed 可复现，留空将自动生成会话种子并同样可复现。</p>
+  <h1>大衍筮法 · 写实分堆（极简版）</h1>
+  <p class="lead">严格“三变成一爻”：<span class="mono">分二→挂一→按四取余（余0记4）</span>。本应用采用<strong>写实分堆（A 等可能）</strong>与<strong>强随机（crypto）</strong>，不提供种子和导出。</p>
 
   <div class="row">
     <div class="card">
-      <div class="grid2" role="group" aria-label="起卦控制区">
-        <div>
-          <label for="seed">可选 Seed（留空=自动生成会话种子 seed32）</label>
-          <input id="seed" type="text" placeholder="例如：yarrow-2025-08-15" />
-        </div>
-        <div style="display:flex;gap:8px;align-items:flex-end">
-          <button id="cast" class="btn" aria-label="起卦">起卦（写实分堆）</button>
-          <button id="exportJson" class="btn secondary" aria-label="导出JSON">导出JSON</button>
-          <button id="aboutBtn" class="btn secondary" aria-label="关于">关于</button>
-        </div>
+      <div style="display:flex;gap:8px;align-items:flex-end" role="group" aria-label="起卦控制区">
+        <button id="cast" class="btn" aria-label="起卦">起卦（写实分堆）</button>
+        <button id="aboutBtn" class="btn secondary" aria-label="关于">关于</button>
       </div>
 
       <div id="result" style="margin-top:14px;display:none">
         <div class="kpi" aria-label="关键参数">
           <div class="pill">引擎：写实分堆（等可能切分）</div>
-          <div class="pill">Seed：<span class="mono" id="seedpill"></span></div>
+          <div class="pill">RNG：强随机</div>
           <div class="pill">VRS：<span class="mono" id="vrs"></span></div>
           <div class="pill">版本：<span class="mono" id="verpill"></span></div>
         </div>
@@ -89,7 +81,7 @@
 
         <div class="grid2" style="margin-top:14px">
           <div class="card">
-            <div style="font-weight:600;margin-bottom:6px">互卦 / 错卦 / 综卦（显示二进制与卦名）</div>
+            <div style="font-weight:600;margin-bottom:6px">互卦 / 错卦 / 综卦（含卦名与二进制）</div>
             <div class="small mono" id="moreHex"></div>
           </div>
           <div class="card">
@@ -111,7 +103,7 @@
       <div id="check" style="margin-top:12px;display:none">
         <div class="small muted">
           参考趋势（写实等可能分堆，长期模拟）：整体呈 <b>9 ≥ 8 ≫ 7 > 6</b>；<br/>
-          经验基准（长期模拟、非校准）：<span class="mono">6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</span>。样本越大越稳定。此处统计仅作随机性健康检查，不用于判定算法对错。
+          经验基准（长期模拟、非校准）：<span class="mono">6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</span>。样本越大越稳定。统计仅作健康检查，不用于判定对错。
         </div>
         <pre id="stat" class="mono" aria-live="polite"></pre>
         <div id="statWarn" class="small warn"></div>
@@ -127,12 +119,13 @@
 <!-- 关于模态 -->
 <div id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
   <div id="aboutBox" tabindex="-1">
-    <div id="aboutTitle" style="font-weight:600;margin-bottom:8px">关于 · 大衍筮法（写实分堆·最终发布版）</div>
+    <div id="aboutTitle" style="font-weight:600;margin-bottom:8px">关于 · 大衍筮法（写实分堆·极简版）</div>
     <div class="small" style="color:#4b5563">
       <p>起卦法：<b>写实分堆模型（唯一）</b>。每变将 N 根随机分两堆且非空（A∈[1,N−1]），第一变先挂一，按四取余（余0记4）。</p>
       <p>三变不变量：第1变仅取5或9；第2/3变仅取4或8；三变后剩余∈{24,28,32,36}→映射到6/7/8/9（违反即报错）。</p>
-      <p>概率特征（长期统计，A 等可能写实）：长期模拟经验基准约为 <b>6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</b>；不同种子/样本会有轻微波动；<u>本应用不以此作校准，仅作参考</u>。</p>
-      <p>可验证随机性（VRS）：seed32（来自用户 Seed 或自动生成）+ nonce + entropy → SHA-256 承诺；导出文件包含所有要素，可100%重现同一卦与全过程。</p>
+      <p>随机性：<b>强随机（crypto）</b>；本版不提供“种子/导出/复制”功能，侧重即用即得。</p>
+      <p>概率特征（长期统计，A 等可能写实）：经验基准约为 <b>6≈1.3%，7≈12.8%，8≈41.6%，9≈44.3%</b>；不同样本有轻微波动。</p>
+      <p>VRS：显示运行承诺哈希（基于运行熵与版本信息），用于标记本次结果；本版不提供复算材料导出。</p>
       <p>版本：<span class="mono" id="aboutVer"></span></p>
     </div>
     <div style="margin-top:12px;text-align:right">
@@ -142,22 +135,27 @@
 </div>
 
 <script>
-/* ========= 版本与构建哈希（运行时自动生成） ========= */
-const APP_VERSION = "v1.2.0-realistic"; // 新增：64卦卦名显示
-let   BUILD_SHA256 = "auto"; // 若为 "auto" 则运行时计算
+/* ========= 版本与构建哈希 ========= */
+const APP_VERSION = "v2.0.0-simplified"; // 极简：无种子、无导出/复制
+let   BUILD_SHA256 = "auto"; // "auto" 时运行时计算
+const __appendVersionToCommit = true;
 
-const __appendVersionToCommit = true; // 将版本/哈希写入承诺串，便于审计
 async function runtimePageSHA256(){
   try{
     const html = document.documentElement.outerHTML;
     const enc = new TextEncoder();
     const buf = await crypto.subtle.digest("SHA-256", enc.encode(html));
-    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-    return hex;
-  }catch(e){ return "runtime-hash-unavailable"; }
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }catch{ return "runtime-hash-unavailable"; }
 }
 
-/* ========= RNG: Mulberry32（单次起卦统一由 seed32 驱动） ========= */
+/* ========= RNG ========= */
+// 强随机：每次取样直接用 crypto
+function cryptoRng(){
+  const u32 = new Uint32Array(1);
+  return () => { crypto.getRandomValues(u32); return (u32[0] >>> 0) / 2 ** 32; };
+}
+// 自检用快速 PRNG（种子来自 crypto，但不对外暴露）
 function mulberry32(seed) {
   let t = seed >>> 0;
   return () => {
@@ -167,33 +165,13 @@ function mulberry32(seed) {
     return ((r ^ (r >>> 14)) >>> 0) / 2 ** 32;
   };
 }
-function strToSeed(s) { let h=0; for (let i=0;i<s.length;i++) h=(h*131+s.charCodeAt(i))>>>0; return h||1; }
+function newSeed32(){ const u = new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
-
-// 自动生成会话 seed32（空 Seed 时使用）
-function newSessionSeed32(){
-  const u32 = new Uint32Array(1);
-  crypto.getRandomValues(u32);
-  const v = (u32[0] >>> 0) || 1;
-  return v;
-}
-// 根据输入框得到 seed32 与标签
-function getSeed32AndLabel(){
-  const s = elSeed.value.trim();
-  if (s) return { seed32: strToSeed(s), label: "user:"+s };
-  const v = newSessionSeed32();
-  return { seed32: v, label: "auto:"+v };
-}
-// 由 seed32 构造 RNG
-function getRngFromSeed32(seed32){
-  return mulberry32((seed32 >>> 0) || 1);
-}
 
 /* ========= 写实分堆（严格三变） ========= */
 function rem4NonZero(x){ const r = x % 4; return r===0?4:r; }
 function splitNonZero(total, rng){
-  // 等可能切分：A 在 [1, total-1]
-  const A = randIntInclusive(rng, 1, total-1);
+  const A = randIntInclusive(rng, 1, total-1); // A∈[1,total-1]
   return [A, total-A];
 }
 function firstChange(n, rng){
@@ -249,7 +227,7 @@ function nuclearFromBinary(b){ return [b[1],b[2],b[3], b[2],b[3],b[4]]; }
 function invertedFromBinary(b){ return [b[5],b[4],b[3],b[2],b[1],b[0]]; }
 function oppositeFromBinary(b){ return b.map(x=>x?0:1); }
 
-/* ========= 八卦命名（组三） ========= */
+/* ========= 八卦（组三）& 64卦映射 ========= */
 const TRIS = {
   "111": {zh:"乾",sym:"☰"}, "110": {zh:"兑",sym:"☱"}, "101": {zh:"离",sym:"☲"}, "100": {zh:"震",sym:"☳"},
   "011": {zh:"巽",sym:"☴"}, "010": {zh:"坎",sym:"☵"}, "001": {zh:"艮",sym:"☶"}, "000": {zh:"坤",sym:"☷"},
@@ -257,7 +235,6 @@ const TRIS = {
 function triNameOf(b3){ const key = b3.join(""); return TRIS[key] ? `${TRIS[key].sym}${TRIS[key].zh}` : key; }
 function trisOf(bin){ const lower = bin.slice(0,3), upper = bin.slice(3,6); return { lower, upper }; }
 
-/* ========= 64 卦（文王序）映射：key 为二进制“底→顶” ========= */
 const HEX64 = {
   "111111": { no:1,  zh:"乾",   full:"乾为天" },
   "000000": { no:2,  zh:"坤",   full:"坤为地" },
@@ -324,34 +301,24 @@ const HEX64 = {
   "101010": { no:63, zh:"既济", full:"水火既济" },
   "010101": { no:64, zh:"未济", full:"火水未济" },
 };
-// 由二进制取 64卦信息与显示标签
-function hexInfoOf(bin){
-  const key = Array.isArray(bin) ? bin.join("") : String(bin);
-  return HEX64[key] || null;
-}
-function hexLabel(bin){
-  const info = hexInfoOf(bin);
-  if (!info) return `未收录（${Array.isArray(bin)?bin.join(""):bin}）`;
-  return `${info.no}. ${info.full}「${info.zh}」`;
-}
+function hexInfoOf(bin){ const key = Array.isArray(bin)?bin.join(""):String(bin); return HEX64[key]||null; }
+function hexLabel(bin){ const i = hexInfoOf(bin); return i ? `${i.no}. ${i.full}「${i.zh}」` : `未收录（${Array.isArray(bin)?bin.join(""):bin}）`; }
 
-/* ========= UI 渲染 ========= */
-const $ = (s)=>document.querySelector(s);
-const elSeed = $("#seed"), elCast=$("#cast"), elRes=$("#result");
+/* ========= UI ========= */
+const $ = s=>document.querySelector(s);
+const elCast=$("#cast"), elRes=$("#result");
 const elMain=$("#mainHex"), elRel=$("#relHex"), elTriM=$("#triMain"), elTriR=$("#triRel");
-const elMore=$("#moreHex"), elDet=$("#detail"), elVRS=$("#vrs"), elExport=$("#exportJson");
-const elN=$("#N"), elTestBtn=$("#selftest"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
+const elMore=$("#moreHex"), elDet=$("#detail"), elVRS=$("#vrs");
+const elN=$("#N"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
 const aboutBtn=$("#aboutBtn"), aboutModal=$("#aboutModal"), aboutClose=$("#aboutClose"), aboutVer=$("#aboutVer"), verpill=$("#verpill");
-const elSeedPill = $("#seedpill");
-const elLabelMain = $("#labelMain");
-const elLabelRel  = $("#labelRel");
+const elLabelMain=$("#labelMain"), elLabelRel=$("#labelRel");
 
 function renderLines(container, lines){
   container.innerHTML = "";
   const visual = lines.slice().reverse(); // 视觉顶→底
   visual.forEach((v)=>{
     const row = document.createElement("div"); row.className="one-line";
-    const isY = v===7||v===9; const moving = v===6||v===9;
+    const isY = (v===7||v===9), moving = (v===6||v===9);
     if (isY){ const bar=document.createElement("div"); bar.className="yang"; row.appendChild(bar); }
     else{ const yin=document.createElement("div"); yin.className="yin";
           const s1=document.createElement("div"); s1.className="seg";
@@ -371,19 +338,13 @@ function renderMore(el, bMain){
   const bNuc = nuclearFromBinary(bMain);
   const bOpp = oppositeFromBinary(bMain);
   const bInv = invertedFromBinary(bMain);
-
   const line = (label, b)=>{
     const {lower, upper} = trisOf(b);
     const tri = `${triNameOf(lower)}/${triNameOf(upper)}`;
     const bin = b.join("");
     return `${label}：${tri}  ${bin} ｜ ${hexLabel(b)}`;
   };
-
-  el.textContent = [
-    line("互卦", bNuc),
-    line("错卦", bOpp),
-    line("综卦", bInv),
-  ].join("\n");
+  el.textContent = [ line("互卦", bNuc), line("错卦", bOpp), line("综卦", bInv) ].join("\n");
 }
 function renderDetail(el, detail){
   const obj = detail.map(d => ({
@@ -393,18 +354,18 @@ function renderDetail(el, detail){
   el.textContent = JSON.stringify(obj, null, 2);
 }
 
-/* ========= 业务动作 ========= */
+/* ========= 杂项 ========= */
 async function sha256Hex(s){
   const enc=new TextEncoder(); const buf=await crypto.subtle.digest("SHA-256", enc.encode(s));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
+/* ========= 起卦 ========= */
 async function castOnce(){
   if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256();
 
-  // 基于种子获取 RNG（无 Seed 则自动生成 seed32）
-  const { seed32, label } = getSeed32AndLabel();
-  const rng = getRngFromSeed32(seed32);
+  // 强随机 RNG
+  const rng = cryptoRng();
   const startEntropy = (performance.now()+"|"+Math.random()).toString();
 
   // 生成卦与衍生
@@ -412,6 +373,7 @@ async function castOnce(){
   const binMain = toBinary(res.lines);
   const linesRel = relatingFrom(res.lines);
   const binRel  = toBinary(linesRel);
+
   renderLines(elMain, res.lines);
   renderLines(elRel, linesRel);
   renderTris(elTriM, binMain);
@@ -420,28 +382,18 @@ async function castOnce(){
   renderDetail(elDet, res.detail);
   elRes.style.display = "block";
 
-  // 在标题处写入 64卦卦名
+  // 标题展示 64卦卦名
   if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
-  // VRS 承诺（包含 seed32 标签）
-  const seedShown = "seed32:"+label; // user:xxx 或 auto:123456789
-  const nonce = "n:"+Date.now();
-  const entropy = "e:"+startEntropy;
-  const commitBase = seedShown+"|"+nonce+"|"+entropy;
+  // VRS（标记本次运行；不用于复现）
+  const commitBase = `rng:crypto|n:${Date.now()}|e:${startEntropy}`;
   const commitStr = __appendVersionToCommit ? (commitBase+"|"+APP_VERSION+"|"+BUILD_SHA256) : commitBase;
   const commit = await sha256Hex(commitStr);
   elVRS.textContent = commit.slice(0,16)+"…";
-  elSeedPill.textContent = seedShown;
-  if (verpill) verpill.textContent = APP_VERSION+" · "+(BUILD_SHA256||"");
 
-  // 保存复算材料
-  window.__lastCast = {
-    seed32, seedLabel: label, nonce, entropy,
-    version: APP_VERSION, build: BUILD_SHA256, commit,
-    lines: res.lines, detail: res.detail, relating: linesRel,
-    binMain, binRel
-  };
+  // 内部状态（不导出、不复制）
+  window.__lastCast = { commit, version:APP_VERSION, build:BUILD_SHA256, lines:res.lines, detail:res.detail, relating:linesRel };
 }
 
 /* ========= 自检（趋势化 + 经验基准，仅参考） ========= */
@@ -450,9 +402,8 @@ function pct(n, d){ return (n/d*100).toFixed(3)+"%"; }
 $("#selftest").addEventListener("click", ()=>{
   const N = Math.max(1000, parseInt(elN.value,10)||100000);
 
-  // 使用与起卦一致的随机机制（便于复算）：取当前输入 Seed，否则自动生成种子
-  const { seed32 } = getSeed32AndLabel();
-  const rng = getRngFromSeed32(seed32);
+  // 用快速 PRNG，种子来自 crypto（不可复现，但速度好）
+  const rng = mulberry32(newSeed32());
 
   const cnt = {6:0,7:0,8:0,9:0};
   for (let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
@@ -463,42 +414,25 @@ $("#selftest").addEventListener("click", ()=>{
     `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
     `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}（A 等可能长期模拟）`;
 
-  // 经验性趋势提示（不作校准判定）
   const trendOK = (cnt[9] >= cnt[8]) && (cnt[8] > cnt[7]) && (cnt[7] > cnt[6]);
-  elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或种子偶然）" }`;
+  elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
 
   elCheck.style.display="block";
   elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000 以稳定观测。" : "";
 });
 
-/* ========= 事件：起卦 / 导出 / 关于 ========= */
+/* ========= 事件 ========= */
 $("#cast").addEventListener("click", castOnce);
-
-$("#exportJson").addEventListener("click", ()=>{
-  if (!window.__lastCast) return alert("请先起卦");
-  const blob = new Blob([JSON.stringify(window.__lastCast, null, 2)], {type:"application/json"});
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-  const ts = new Date().toISOString().replace(/[:.]/g,"-");
-  const c8 = (window.__lastCast.commit||"").slice(0,8);
-  a.download = `yarrow-${ts}-${c8}.json`; a.click(); URL.revokeObjectURL(a.href);
-});
-
 $("#aboutBtn").addEventListener("click", async ()=>{
   if (BUILD_SHA256==="auto") BUILD_SHA256 = await runtimePageSHA256();
   aboutVer.textContent = APP_VERSION+" · "+(BUILD_SHA256?BUILD_SHA256.slice(0,8)+"…":"");
   aboutModal.style.display="block";
-  const box = document.getElementById("aboutBox");
-  setTimeout(()=>box.focus(),0); // 焦点进入
+  setTimeout(()=>document.getElementById("aboutBox").focus(),0);
 });
 $("#aboutClose").addEventListener("click", ()=> closeAbout());
 aboutModal.addEventListener("click", (e)=>{ if(e.target===aboutModal) closeAbout(); });
-document.addEventListener("keydown", (e)=>{
-  if (aboutModal.style.display==="block" && e.key==="Escape"){ closeAbout(); }
-});
-function closeAbout(){
-  aboutModal.style.display="none";
-  aboutBtn?.focus(); // 还焦
-}
+document.addEventListener("keydown", (e)=>{ if (aboutModal.style.display==="block" && e.key==="Escape"){ closeAbout(); }});
+function closeAbout(){ aboutModal.style.display="none"; $("#aboutBtn")?.focus(); }
 
 /* ========= 初始版本条 ========= */
 (async function initVersionBar(){
