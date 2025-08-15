@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="light dark">
-<title>大衍筮法 · 写实分堆（交互·自检·指南/解卦·自下而上）</title>
+<title>大衍筮法 · 写实分堆</title>
 <meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；含‘指南/解卦（朱熹）’；‘已成爻’自下而上显示。">
 <style>
   :root{
@@ -74,7 +74,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>大衍筮法 · 写实分堆（交互·自检·指南/解卦）</h1>
+  <h1>大衍筮法 · 写实分堆</h1>
   <p class="lead">按古筮法（蓍草法）起卦：你点“分堆”，我严格推演，显示卦象与判读入口。</p>
 
   <div class="row">
@@ -198,7 +198,7 @@
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">如何解卦 · 朱熹法</div>
-    <div class="small muted">只回答一件事：<b>现在该读哪段</b>（卦辞/爻辞/用辞）。</div>
+    <!-- 按需去除“只回答一件事”文案 -->
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
     <div class="hr"></div>
@@ -225,7 +225,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v4.3.2-ux-copy-demo+polish";
+const APP_VERSION = "v5.0.0";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -579,7 +579,7 @@ async function finishHex(){
 
   methodBtn.disabled = false;
   copyBtn.disabled = false;
-  elStatus.innerHTML = `<span class="ok">全卦完成。</span> 可点<b>解卦（朱熹）</b>获取“读哪段”，或<b>复制结果</b>保存/分享。`;
+  elStatus.innerHTML = `<span class="ok">全卦完成。</span> 可点<b>解卦（朱熹）</b>查看判读路径，或<b>复制结果</b>保存/分享。`;
 }
 
 /* ========= 朱熹占断（含前十/后十） ========= */
@@ -633,7 +633,7 @@ function openMethod(){
       <div><b>动爻：</b>${mov.length? ("第 "+mov.join("、")+" 爻"):"（无）"}</div>
     </div>
     <div class="hr"></div>
-    <div class="small"><b>现在请读：</b> ${sum.title}</div>
+    <div class="small"><b>${sum.title}</b></div>
     <ul class="small" style="margin:6px 0 0 18px; line-height:1.75">
       ${sum.read.map(r=>`<li><b>${r.type}</b>：${r.which}　<span class="muted">（所属：${r.hex}）</span></li>`).join("")}
     </ul>
@@ -647,7 +647,6 @@ function closeMethod(){ methodModal.style.display="none"; methodBtn?.focus(); }
 /* 示例演练：随机 1～2 动爻，演示“读哪段”，不改变当前 state */
 function randomDemoLines(){
   const rng = mulberry32(newSeed32());
-  // 基底先生成 7/8 静爻
   const lines = Array.from({length:6}, ()=> (randIntInclusive(rng,0,1)?7:8));
   const m = randIntInclusive(rng,1,2);
   const idxs = [];
@@ -655,10 +654,7 @@ function randomDemoLines(){
     const i = randIntInclusive(rng,1,6);
     if(!idxs.includes(i)) idxs.push(i);
   }
-  idxs.forEach(i=>{
-    // 随机设为 6 或 9（动）
-    lines[i-1] = randIntInclusive(rng,0,1)?6:9;
-  });
+  idxs.forEach(i=>{ lines[i-1] = randIntInclusive(rng,0,1)?6:9; });
   return lines;
 }
 function renderDemo(){
@@ -671,7 +667,7 @@ function renderDemo(){
   let out = "";
   out += `示例六爻（自下而上）：${lines.join(", ")}；动爻：${mov.length? ("第 "+mov.join("、")+" 爻"):"（无）"}\n`;
   out += `本卦：${hexLabel(mainBin)}｜之卦：${hexLabel(relBin)}\n`;
-  out += `现在请读：${sum.title}\n`;
+  out += `${sum.title}\n`;
   sum.read.forEach(r=>{ out += `· ${r.type}：${r.which}（所属：${r.hex}）\n`; });
   demoOut.textContent = out;
 }
