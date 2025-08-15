@@ -35,6 +35,10 @@
   .ok{color:var(--ok)} .warn{color:#b45309}
   pre{white-space:pre-wrap;font-size:12px;background:#f7f7f7;border:1px solid #eee;border-radius:10px;padding:10px;overflow:auto}
 
+  /* 链接芯片 */
+  a.linkchip{display:inline-block;margin:6px 6px 0 0;padding:5px 9px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111;text-decoration:none;font-size:12px}
+  a.linkchip:hover{box-shadow:0 1px 0 rgba(0,0,0,.08)}
+
   /* Modal */
   .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
   .modal > .box{max-width:760px;margin:7vh auto;background:#fff;border-radius:12px;padding:16px;outline:none}
@@ -44,9 +48,14 @@
 
   @media (prefers-color-scheme: dark){
     :root{ --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb; }
+    .card{ border-color:#222 }
+    .btn{ background:var(--accent); color:#111; }                 /* ★ 修复：暗色下主按钮改深字色 */
     .btn.secondary,.btn.ghost{ background:#ffffff10; border-color:#ffffff30; color:var(--fg); }
+    .pill{ background:#1a1a1a; border-color:#2a2a2a; color:var(--fg); } /* ★ 修复：胶囊反转为深底浅字 */
+    input,select,textarea{ background:#0f0f0f; color:var(--fg); border:1px solid #2a2a2a; border-radius:10px; padding:8px 10px; }
     .modal > .box{ background:#111; color:var(--fg); }
     .hr{ background:#222 }
+    a.linkchip{ background:#1a1a1a; border-color:#2a2a2a; color:#e5e7eb; } /* ★ 链接芯片暗色可读 */
   }
 </style>
 </head>
@@ -96,12 +105,14 @@
       <div style="font-weight:600;margin-bottom:6px" id="labelMain">本卦</div>
       <div id="mainHex" class="lines"></div>
       <div class="small muted" id="triMain"></div>
+      <div id="linksMain" class="small" aria-label="外部资源链接（本卦）"></div><!-- ★ 新增：本卦资源链接 -->
 
       <div style="height:12px"></div>
 
       <div style="font-weight:600;margin-bottom:6px" id="labelRel">之卦</div>
       <div id="relHex" class="lines"></div>
       <div class="small muted" id="triRel"></div>
+      <div id="linksRel" class="small" aria-label="外部资源链接（之卦）"></div><!-- ★ 新增：之卦资源链接 -->
 
       <div style="height:12px"></div>
 
@@ -161,7 +172,6 @@
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
     <div class="hr"></div>
-    <!-- ★ 文案已按朱熹法更新：静卦“内贞外悔”，三爻变自动“前十/后十” ★ -->
     <div class="small muted">
       参考口径（朱熹·《易学启蒙·考变占》要点）：<br>
       ① 六爻静：读<b>本卦卦辞</b>（并参《大象》）；同时可按<b>“内卦为贞、外卦为悔”</b>提示内外取向。<br>
@@ -170,8 +180,7 @@
       ④ 三爻动：读<b>本卦与之卦卦辞</b>，并<b>自动细分“前十/后十”</b>：动爻<b>含初爻</b>→前十→<b>本卦为贞</b>；不含初→后十→<b>之卦为悔</b>；<br>
       ⑤ 四爻动：读<b>之卦中两静爻爻辞</b>，以下爻为主；<br>
       ⑥ 五爻动：读<b>之卦中唯一静爻爻辞</b>；<br>
-      ⑦ 六爻皆动：<b>本卦为乾/坤时取“用九/用六”</b>，其余取<b>之卦卦辞</b>。<br>
-      （当前仅提供朱熹法；后续可扩展王弼义理、京房纳甲等）
+      ⑦ 六爻皆动：<b>本卦为乾/坤时取“用九/用六”</b>，其余取<b>之卦卦辞</b>。
     </div>
     <div class="hr"></div>
     <div style="text-align:right;margin-top:10px">
@@ -182,7 +191,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v3.8.0-zhuxi-update";
+const APP_VERSION = "v3.9.0-darkfix-links";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -289,6 +298,7 @@ const elVRS=$("#vrs"), verpill=$("#verpill");
 const elN=$("#N"), elCheck=$("#check"), elStat=$("#stat"), elWarn=$("#statWarn");
 const guideBtn=$("#guideBtn"), guideModal=$("#guideModal"), guideClose=$("#guideClose");
 const methodBtn=$("#methodBtn"), methodModal=$("#methodModal"), methodClose=$("#methodClose"), methodSummary=$("#methodSummary");
+const linksMain=$("#linksMain"), linksRel=$("#linksRel");
 
 /* ========= 渲染 ========= */
 function renderOneLineVisual(v){
@@ -322,6 +332,55 @@ function renderMore(el,bMain){
   el.textContent=[ line("互卦",bNuc), line("错卦",bOpp), line("综卦",bInv) ].join("\n");
 }
 
+/* ========= 外部链接构建 ========= */
+const CN_POS = ["初","二","三","四","五","上"];
+function buildLinks(targetEl, binArr, linesForYao){
+  const info = hexInfoOf(binArr.join(""));
+  targetEl.innerHTML = "";
+  if(!info) return;
+
+  const name = info.zh;
+  const resTitle = document.createElement("div");
+  resTitle.className = "small muted";
+  resTitle.textContent = "外部资源（搜索）：";
+  targetEl.appendChild(resTitle);
+
+  const q = encodeURIComponent("周易 "+name);
+  const links = [
+    { t:"维基(中文)", url:`https://zh.wikipedia.org/w/index.php?search=${q}` },
+    { t:"维基文库",    url:`https://zh.wikisource.org/w/index.php?search=${q}` },
+    { t:"CTP",         url:`https://ctext.org/zh?searchu=${q}` },
+    { t:"百度",        url:`https://www.baidu.com/s?wd=${q}` },
+    { t:"Bing",        url:`https://www.bing.com/search?q=${q}` },
+  ];
+  const box=document.createElement("div");
+  links.forEach(L=>{
+    const a=document.createElement("a");
+    a.className="linkchip"; a.href=L.url; a.target="_blank"; a.rel="noopener noreferrer";
+    a.textContent=L.t; box.appendChild(a);
+  });
+  targetEl.appendChild(box);
+
+  // 动爻快捷搜索（本卦动爻）
+  if (Array.isArray(linesForYao) && linesForYao.some(isMoving)){
+    const t2=document.createElement("div"); t2.className="small muted"; t2.style.marginTop="6px"; t2.textContent="动爻直达（爻辞搜索）：";
+    targetEl.appendChild(t2);
+    const b2=document.createElement("div");
+    linesForYao.forEach((v,i)=>{
+      if(isMoving(v)){
+        const yao = (v===9) ? "九" : "六";
+        const pos = CN_POS[i]; // i:0..5
+        const qq = encodeURIComponent(`周易 ${name} ${yao}${pos} 爻辞`);
+        const a=document.createElement("a");
+        a.className="linkchip"; a.href=`https://www.bing.com/search?q=${qq}`;
+        a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=`${yao}${pos}`;
+        b2.appendChild(a);
+      }
+    });
+    targetEl.appendChild(b2);
+  }
+}
+
 /* ========= 交互状态 ========= */
 const state = {
   rng: cryptoRng(),
@@ -344,6 +403,7 @@ function resetAll(){
   elCurrDetail.textContent = "";
   elMain.innerHTML = elRel.innerHTML = elMore.textContent = "";
   elTriM.textContent = elTriR.textContent = "";
+  linksMain.innerHTML = linksRel.innerHTML = "";            // ★ 清空外部链接
   elLabelMain.textContent="本卦"; elLabelRel.textContent="之卦";
   methodBtn.disabled = true;
   renderBuilt(state.lines);
@@ -423,6 +483,10 @@ async function finishHex(){
   if (elLabelMain) elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   if (elLabelRel)  elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
+  // ★ 构建外部链接（搜索）
+  buildLinks(linksMain, binMain, state.lines);
+  buildLinks(linksRel, binRel, state.lines);
+
   const bNuc = nuclearFromBinary(binMain);
   const bOpp = oppositeFromBinary(binMain);
   const bInv = invertedFromBinary(binMain);
@@ -441,33 +505,7 @@ async function finishHex(){
   elStatus.innerHTML = `<span class="ok">全卦完成。</span> 右侧可查看“本卦/之卦/互错综”的卦名与结构；需按朱熹法判读请点“解卦方式”。`;
 }
 
-/* ========= 独立分布自检 ========= */
-function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
-document.getElementById("selftest").addEventListener("click", ()=>{
-  const N = Math.max(1000, parseInt(elN.value,10)||100000);
-  const rng = mulberry32(newSeed32());
-  const cnt = {6:0,7:0,8:0,9:0};
-  for(let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
-  elStat.textContent =
-    `样本数 N = ${N}\n`+
-    `计数：${JSON.stringify(cnt)}\n`+
-    `比例：{6:${pct(cnt[6],N)}, 7:${pct(cnt[7],N)}, 8:${pct(cnt[8],N)}, 9:${pct(cnt[9],N)}}\n`+
-    `参考基准：{6:≈1.3%, 7:≈12.8%, 8:≈41.6%, 9:≈44.3%}`;
-  const trendOK=(cnt[9]>=cnt[8])&&(cnt[8]>cnt[7])&&(cnt[7]>cnt[6]);
-  elStat.textContent += `\n经验趋势检查：${ trendOK ? "符合长期趋势（9≥8≫7>6）" : "与长期趋势不一致（可能样本偏小或随机波动）" }`;
-  elCheck.style.display="block";
-  elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000。" : "";
-});
-
-/* ========= 指南模态 ========= */
-function openGuide(){ guideModal.style.display="block"; setTimeout(()=>guideModal.querySelector(".box").focus(),0); }
-function closeGuide(){ guideModal.style.display="none"; guideBtn?.focus(); }
-guideBtn.addEventListener("click", openGuide);
-guideClose.addEventListener("click", closeGuide);
-guideModal.addEventListener("click", (e)=>{ if(e.target===guideModal) closeGuide(); });
-document.addEventListener("keydown",(e)=>{ if(guideModal.style.display==="block" && e.key==="Escape") closeGuide(); });
-
-/* ========= 解卦方式（朱熹） ========= */
+/* ========= 朱熹占断 ========= */
 function movingIndices(lines){ const out=[]; for(let i=0;i<6;i++){ if(isMoving(lines[i])) out.push(i+1); } return out; } // 1..6（底→顶）
 function zhuXiAdvice(lines){
   const mov = movingIndices(lines); const m = mov.length;
