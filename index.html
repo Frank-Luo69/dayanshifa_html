@@ -167,11 +167,6 @@
       <div id="statWarn" class="small warn"></div>
     </div>
   </div>
-
-  <p class="small muted" style="margin-top:16px">
-    术语速览：动爻＝6（老阴）、9（老阳）；阳爻＝7/9，阴爻＝6/8。之卦＝把动位翻转（6→阳、9→阴）。互卦取2-4与3-5为上下；错卦=阴阳互换；综卦=六爻倒置。
-    八卦（底→顶）：乾111、兑110、离101、震100、巽011、坎010、艮001、坤000。
-  </p>
 </div>
 
 <!-- 指南 -->
@@ -198,9 +193,14 @@
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">如何解卦 · 朱熹法</div>
-    <!-- 按需去除“只回答一件事”文案 -->
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
+
+    <!-- 新增提示：可复制结果到你的 AI 助手 -->
+    <div class="small muted" style="margin-top:6px">
+      小提示：你可以点击右侧“<b>复制结果</b>”，将本次起卦文本粘贴到你的 AI 助手，用作<b>辅助解卦</b>的参考材料。
+    </div>
+
     <div class="hr"></div>
     <div class="small muted">
       规则提要（含前十/后十）：<br>
@@ -225,7 +225,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v5.0.0";
+const APP_VERSION = "v5.0.1";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -315,7 +315,7 @@ const HEX64 = {
 "111100":{no:34,zh:"大壮",full:"雷天大壮"},"000101":{no:35,zh:"晋",full:"火地晋"},"101000":{no:36,zh:"明夷",full:"地火明夷"},
 "101011":{no:37,zh:"家人",full:"风火家人"},"110101":{no:38,zh:"睽",full:"火泽睽"},"001010":{no:39,zh:"蹇",full:"水山蹇"},
 "010100":{no:40,zh:"解",full:"雷水解"},"110001":{no:41,zh:"损",full:"山泽损"},"100011":{no:42,zh:"益",full:"风雷益"},
-"111110":{no:43,zh:"夬",full:"泽天夬"},"011111":{no:44,zh:"姤",full:"天风姤"},"000110":{no:45,zh:"萃",full:"泽地萃"},
+"111110":{no:43,zh:"夬",full:"泽天夬"},"011111":{no:44,zh:"姤",full:"天风姤"},"000110":{no:45,"zh":"萃","full":"泽地萃"},
 "011000":{no:46,zh:"升",full:"地风升"},"010110":{no:47,zh:"困",full:"泽水困"},"011010":{no:48,zh:"井",full:"水风井"},
 "101110":{no:49,zh:"革",full:"泽火革"},"011101":{no:50,zh:"鼎",full:"火风鼎"},"100100":{no:51,zh:"震",full:"震为雷"},
 "001001":{no:52,zh:"艮",full:"艮为山"},"001011":{no:53,zh:"渐",full:"风山渐"},"110100":{no:54,zh:"归妹",full:"雷泽归妹"},
@@ -380,7 +380,7 @@ function renderBuilt(lines){
   elBuilt.innerHTML="";
   if(!lines.length){ elBuiltText.textContent="尚无成爻。"; return; }
   lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
-  elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下到上：${lines.join(", ")}）`;
+  elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下而上：${lines.join(", ")}）`;
 }
 function renderTris(el, bin){
   const {lower,upper}=trisOf(bin);
