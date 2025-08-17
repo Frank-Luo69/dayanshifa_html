@@ -4,8 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="light dark">
-<title>大衍筮法 · 写实分堆 · 零偏差版</title>
-<meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；模4均匀；WebCrypto离散零偏差；显示64卦卦名；含‘指南/解卦（朱熹）’；‘已成爻’自下而上显示。">
+<title>大衍筮法 · 写实分堆</title>
+<meta name="description" content="严格还原：三变一爻（分二→挂一→按四取余，余0记4），六爻成卦；强随机；显示64卦卦名；含‘指南/解卦（朱熹）’；‘已成爻’自下而上显示。">
 <style>
   :root{
     --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309;
@@ -98,7 +98,7 @@
       <!-- KPI：淡化 -->
       <div class="kpi">
         <div class="pill dim">模式：写实分堆（模4均匀）</div>
-        <div class="pill dim">RNG：WebCrypto 离散零偏差</div>
+        <div class="pill dim">RNG：强随机</div>
         <div class="pill dim">VRS：<span class="mono" id="vrs">—</span></div>
         <div class="pill dim">版本：<span class="mono" id="verpill">—</span></div>
       </div>
@@ -188,7 +188,7 @@
   </div>
 </div>
 
-<!-- 指南 -->
+<!-- 指南（与前版本一致，已省略不相关文案） -->
 <div class="modal" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
   <div class="box" tabindex="-1">
     <div id="guideTitle" class="title">指南 · 一看就会</div>
@@ -204,7 +204,7 @@
   </div>
 </div>
 
-<!-- 解卦（朱熹） -->
+<!-- 解卦（朱熹）弹窗（与前版本一致，已省略不相关文案） -->
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">如何解卦 · 朱熹法</div>
@@ -222,7 +222,7 @@
 
 <script>
 /* ========= 版本与构建 ========= */
-const APP_VERSION = "v5.2.0-zero";
+const APP_VERSION = "v5.1.0";
 let   BUILD_SHA256 = "";
 const __appendVersionToCommit = true;
 
@@ -235,50 +235,43 @@ async function computeBuildHashOnce(){
 }
 function cryptoNonceHex(bytes=16){ const u=new Uint8Array(bytes); crypto.getRandomValues(u); return Array.from(u).map(b=>b.toString(16).padStart(2,"0")).join(""); }
 
-/* ========= RNG（保留，可用于演示/自检；核心采样见下） ========= */
+/* ========= RNG ========= */
 function cryptoRng(){ const u32=new Uint32Array(1); return ()=>{ crypto.getRandomValues(u32); return (u32[0]>>>0)/2**32; }; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
 function mulberry32(seed){ let t = seed >>> 0; return () => { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), (t | 1)); r ^= r + Math.imul(r ^ (r >>> 7), (r | 61)); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
 function newSeed32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
 
-/* ========= 无偏离散采样（WebCrypto 32bit + 拒绝采样） ========= */
-function randUint32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0); }
-function uniformIndex(n){
-  if(n<=0) throw new Error("uniformIndex n<=0");
-  const MOD = 0x100000000;                 // 2^32
-  const lim = MOD - (MOD % n);             // 可整除覆盖
-  let x; do { x = randUint32(); } while (x >= lim);
-  return x % n;
-}
-function choose(arr){ return arr[uniformIndex(arr.length)]; }
-
 /* ========= 工具 ========= */
 function rem4NonZero(x){ const r=x%4; return r===0?4:r; }
 
-/* ========= 模4均匀切分（零偏差） =========
-   先在 {0,1,2,3} 上等概率抽 A 的模4余数 r，
-   再在 [1, total-1] 里无偏挑选满足 A≡r(mod4) 的 A；B=total-A。*/
-function splitNonZero(total /*, rng（忽略）*/){
-  const r = uniformIndex(4);                 // 0..3
-  const start = (r===0 ? 4 : r);
+/* ========= 关键改动 #1：模4均匀切分 =========
+   先在 {0,1,2,3} 上等概率抽取 A 的模4余数 r，
+   再在 [1, total-1] 区间里挑选满足 A≡r(mod4) 的 A（等概率），B=total-A。
+   ——这保持“分二”的写实性，同时把随机性落实在真正起作用的模4层。 */
+function splitNonZero(total, rng){
+  const r = Math.floor(rng()*4);                // 0..3
+  const start = (r===0 ? 4 : r);                 // 最小正整数且同余 r
   const Avals = [];
-  for(let a=start; a<=total-1; a+=4) Avals.push(a);
-  const A = Avals.length ? choose(Avals) : (1 + uniformIndex(total-1)); // 兜底
+  for(let a=start; a<=total-1; a+=4){ Avals.push(a); }
+  // 理论上 total≥24，总能取到；保险起见做个兜底
+  const A = Avals.length ? Avals[Math.floor(rng()*Avals.length)]
+                         : randIntInclusive(rng,1,total-1);
   return [A, total - A];
 }
 
-/* ========= 三变皆挂一 ========= */
-function firstChange(n /*, rng*/){
-  const [A,B] = splitNonZero(n);
+/* ========= 关键改动 #2：三变皆挂一 =========
+   后续变与首变同仪：分二→（右堆）挂一→两堆按四取余（余0当4）→ 本变移去 = 1 + 余(A) + 余(B-1) */
+function firstChange(n, rng){
+  const [A,B] = splitNonZero(n, rng);
   const leftRem  = rem4NonZero(A);
   const rightRem = rem4NonZero(B-1); // 先挂一
   const taken = 1 + leftRem + rightRem; // 5 或 9
   return { after:n-taken, step:{from:n,to:n-taken,A,B,leftRem,rightRem,taken,kind:"第1变（挂一）"} };
 }
-function nextChange(n /*, rng*/){
-  const [A,B] = splitNonZero(n);
+function nextChange(n, rng){
+  const [A,B] = splitNonZero(n, rng);
   const leftRem  = rem4NonZero(A);
-  const rightRem = rem4NonZero(B-1); // 仍旧挂一
+  const rightRem = rem4NonZero(B-1); // ← 同样“挂一”
   const taken = 1 + leftRem + rightRem; // 4 或 8
   return { after:n-taken, step:{from:n,to:n-taken,A,B,leftRem,rightRem,taken,kind:"后续变（挂一）"} };
 }
@@ -291,11 +284,11 @@ function remainingToLine(n){
   if(n===36) return 9;
   throw new Error("Unexpected remainder: "+n);
 }
-function genOneStep(n, idx /*, rng*/){ return (idx===1) ? firstChange(n) : nextChange(n); }
-function genLineYarrow(/*rng*/){
-  let n=49; const t1=firstChange(n); n=t1.after;
-  const t2=nextChange(n); n=t2.after;
-  const t3=nextChange(n); n=t3.after;
+function genOneStep(n, idx, rng){ return (idx===1) ? firstChange(n, rng) : nextChange(n, rng); }
+function genLineYarrow(rng){
+  let n=49; const t1=firstChange(n,rng); n=t1.after;
+  const t2=nextChange(n,rng); n=t2.after;
+  const t3=nextChange(n,rng); n=t3.after;
   return { value:remainingToLine(n) };
 }
 
@@ -313,7 +306,7 @@ const TRIS = {"111":{zh:"乾",sym:"☰"},"110":{zh:"兑",sym:"☱"},"101":{zh:"�
 function triNameOf(b3){ const k=b3.join(""); return TRIS[k]?`${TRIS[k].sym}${TRIS[k].zh}`:k; }
 function trisOf(bin){ const lower=bin.slice(0,3), upper=bin.slice(3,6); return {lower,upper}; }
 
-const HEX64 = {
+const HEX64 = {/* 64卦映射（与前版本一致，此处省略，实际请保留你原表） */
 "111111":{no:1,zh:"乾",full:"乾为天"},"000000":{no:2,zh:"坤",full:"坤为地"},
 "100010":{no:3,zh:"屯",full:"水雷屯"},"010001":{no:4,zh:"蒙",full:"山水蒙"},
 "111010":{no:5,zh:"需",full:"水天需"},"010111":{no:6,zh:"讼",full:"天水讼"},
@@ -336,7 +329,7 @@ const HEX64 = {
 "001010":{no:39,zh:"蹇",full:"水山蹇"},"010100":{no:40,zh:"解",full:"雷水解"},
 "110001":{no:41,zh:"损",full:"山泽损"},"100011":{no:42,zh:"益",full:"风雷益"},
 "111110":{no:43,zh:"夬",full:"泽天夬"},"011111":{no:44,zh:"姤",full:"天风姤"},
-"000110":{no:45,zh:"萃",full:"泽地萃"},"011000":{no:46,zh:"升",full:"地风升"},
+"000110":{no:45,"zh":"萃","full":"泽地萃"},"011000":{no:46,zh:"升",full:"地风升"},
 "010110":{no:47,zh:"困",full:"泽水困"},"011010":{no:48,zh:"井",full:"水风井"},
 "101110":{no:49,zh:"革",full:"泽火革"},"011101":{no:50,zh:"鼎",full:"火风鼎"},
 "100100":{no:51,zh:"震",full:"震为雷"},"001001":{no:52,zh:"艮",full:"艮为山"},
@@ -549,7 +542,7 @@ function updateCurrUI(){
 }
 function doOneSplit(){
   const {n, stepIdx} = state.curr;
-  const {after, step} = genOneStep(n, stepIdx);
+  const {after, step} = genOneStep(n, stepIdx, state.rng);
   step.idx = stepIdx; state.curr.steps.push(step); state.curr.n = after; state.curr.stepIdx++;
 
   if (state.curr.stepIdx===4){
@@ -625,8 +618,9 @@ async function finishHex(){
 function pct(n,d){ return (n/d*100).toFixed(3)+"%"; }
 document.getElementById("selftest").addEventListener("click", ()=>{
   const N = Math.max(1000, parseInt(elN.value,10)||100000);
+  const rng = mulberry32(newSeed32());
   const cnt = {6:0,7:0,8:0,9:0};
-  for(let i=0;i<N;i++){ const { value } = genLineYarrow(); cnt[value]++; }
+  for(let i=0;i<N;i++){ const { value } = genLineYarrow(rng); cnt[value]++; }
   elStat.textContent =
     `样本数 N = ${N}\n`+
     `计数：${JSON.stringify(cnt)}\n`+
@@ -652,7 +646,7 @@ document.addEventListener("keydown",(e)=>{ if(guideModalEl.style.display==="bloc
 
 const methodBtnEl=document.getElementById("methodBtn"), methodModalEl=document.getElementById("methodModal"), methodCloseEl=document.getElementById("methodClose");
 methodBtnEl.addEventListener("click", ()=>{ methodModalEl.style.display="block"; setTimeout(()=>methodModalEl.querySelector(".box").focus(),0); });
-methodCloseEl.addEventListener("click", ()=>{ methodModalEl.style.display="none"; methodBtnEl?.focus(); } });
+methodCloseEl.addEventListener("click", ()=>{ methodModalEl.style.display="none"; methodBtnEl?.focus(); });
 methodModalEl.addEventListener("click", (e)=>{ if(e.target===methodModalEl) { methodModalEl.style.display="none"; methodBtnEl?.focus(); } });
 document.addEventListener("keydown",(e)=>{ if(methodModalEl.style.display==="block" && e.key==="Escape") { methodModalEl.style.display="none"; methodBtnEl?.focus(); } });
 
