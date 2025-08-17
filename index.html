@@ -10,6 +10,7 @@
   :root{
     --bg:#fafafa; --fg:#111; --muted:#6b7280; --card:#fff; --line:#111; --accent:#111; --ok:#065f46; --warn:#b45309;
     --code-bg:#f7f7f7; --code-fg:#111; --code-border:#e5e7eb; --chip-border:#d1d5db;
+    --tip-bg:#f8fafc; --tip-border:#e5e7eb;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
@@ -28,8 +29,8 @@
 
   /* 突出主打按钮（指南/解卦） */
   .btn.prominent{padding:12px 16px;border-radius:12px;font-weight:600;box-shadow:0 1px 0 rgba(0,0,0,.08)}
-  .btn.prominent:disabled{opacity:.65} /* 默认略淡 */
-  #methodBtn:disabled{opacity:.5; filter:saturate(.8)} /* 解卦禁用：再淡一点点 */
+  .btn.prominent:disabled{opacity:.65}
+  #methodBtn:disabled{opacity:.45; filter:saturate(.75)} /* 解卦禁用：更淡一点 */
 
   .muted{color:var(--muted)} .small{font-size:12px} .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace}
   .grid2{display:grid;gap:12px;grid-template-columns:1fr}
@@ -68,10 +69,14 @@
   details.hint{margin-top:12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
   details.hint>summary{cursor:pointer;outline:none}
 
+  /* 解卦面板内的 AI 提示 */
+  .ai-tip{margin-top:8px;background:var(--tip-bg);border:1px dashed var(--tip-border);border-radius:10px;padding:8px 10px}
+
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb;
       --code-bg:#0f0f0f; --code-fg:#e5e7eb; --code-border:#222; --chip-border:#2a2a2a;
+      --tip-bg:#0f1113; --tip-border:#222;
     }
     .card{ border-color:#222 }
     .btn{ background:var(--accent); color:#111; }
@@ -187,31 +192,34 @@
   </div>
 </div>
 
-<!-- 指南（重写） -->
+<!-- 指南（重写：流程引导 + 文化简介 + AI 兜底） -->
 <div class="modal" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
   <div class="box" tabindex="-1">
     <div id="guideTitle" class="title">指南 · 一看就会</div>
     <div class="hr"></div>
 
-    <div class="small" style="line-height:1.8">
-      <b>本应用怎么用（3 步走）</b><br>
-      ① 点<b>开始一卦</b>。<br>
-      ② 对<b>每一爻</b>连点<b>分堆</b>共 <b>3 次</b>（系统严格按古法推演；第 1 次会“挂一”）。<br>
-      ③ 六爻完成后，右侧显示<b>本卦/之卦</b>、卦名、互/错/综等；需要判读时，点<b>解卦（朱熹）</b>，按提示阅读对应的<b>卦辞/爻辞</b>即可。
+    <div class="small" style="line-height:1.85">
+      <b>如何使用 · 带你走完一遍</b><br>
+      1）<b>想清楚问题</b>：聚焦、具体（如“今天是否适合出行？”）。<br>
+      2）点<b>开始一卦</b>。<br>
+      3）对<b>每一爻</b>连点<b>分堆</b><u>三次</u>（第 1 次会自动“挂一”），完成后点<b>开始下一爻</b>。<br>
+      4）六爻成卦后，右侧会出现<b>本卦/之卦</b>、卦名，及<b>互/错/综</b>信息；本卦区域还提供<b>动爻直达</b>查原文。<br>
+      5）需要阅读判辞时，点<b>解卦（朱熹）</b>，里面会明确告诉你：<b>现在应该读哪一段、先读谁、为什么</b>。<br>
+      6）若要保存或分享，点<b>复制结果</b>（可选择是否包含“三变明细”）。
+      <br><br>
+      <b>实在不会解？一键用 AI</b><br>
+      · 点击<b>复制结果</b> → 粘贴给你的 AI 助手 → 说：“<i>请按朱熹法，告诉我应读哪段卦辞/爻辞，并给出处与要点</i>”。<br>
+      · 也可以追加：“<i>结合我提出的问题，给一个通俗的解读与应对建议（非迷信）</i>”。
     </div>
 
     <div class="hr"></div>
 
-    <div class="small" style="line-height:1.8">
-      <b>大衍筮法简介（极简版）</b><br>
-      · 用数：以 49 支蓍草起算。<br>
-      · 每一爻要经历<b>三变</b>：<br>
-      &nbsp;&nbsp;— 先<b>分为两堆</b>（左右皆不得为 0）；<br>
-      &nbsp;&nbsp;— 第 1 变先从右堆<b>“挂一”</b>（取走 1）；<br>
-      &nbsp;&nbsp;— 左右堆各<b>按四取余</b>，余数为 1–3 时取走该数，余 0 视为 4；<br>
-      &nbsp;&nbsp;— 三变合计取走 5/9/8/8，剩余数分别对应爻值<b>6/7/8/9</b>；<br>
-      &nbsp;&nbsp;— 六爻自下而上成卦；凡<b>6/9 为动</b>，把动位阴阳反转得到<b>之卦</b>。<br>
-      · 本应用完全在本地模拟上述过程，且支持复制“起卦结果”，方便你外部查注。
+    <div class="small" style="line-height:1.85">
+      <b>大衍筮法 · 简介（来历 / 地位 / 理念 / 逻辑）</b><br>
+      · <u>来历</u>：源出《易》之筮法传统，先秦已成体系，历经两汉注疏与宋代理学家整理流传；“大衍”意指生成之数与万物化生之理。<br>
+      · <u>地位</u>：是传统占筮中较为规范、严谨的一套<b>象数</b>操作程序，用以从“变”中取义，配合《易经》文本（卦辞、爻辞、象传）加以体会。<br>
+      · <u>理念</u>：重在<b>阴阳动静、时位得失</b>之辨；以“数”呈“象”，以“象”取“义”，强调<b>因时制宜</b>与<b>反思自处</b>，并非宿命决定。<br>
+      · <u>逻辑</u>：以 49 支蓍草起算；每爻“三变”定一数（6/7/8/9），六爻自下而上成卦；遇 6/9 为<b>动爻</b>则变为<b>之卦</b>；再按方法（如朱熹法）<b>决定读哪段文本</b>以取义。
     </div>
 
     <div class="hr"></div>
@@ -221,7 +229,7 @@
   </div>
 </div>
 
-<!-- 解卦（朱熹）：结果更易懂 -->
+<!-- 解卦（朱熹）：更清楚的“要做什么” + AI 提示紧随其后 -->
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">如何解卦 · 朱熹法</div>
@@ -230,15 +238,10 @@
 
     <div class="hr"></div>
     <div class="small muted">
-      规则速记：<br>
+      规则速记（供参考）：<br>
       ① 六爻静→读<b>本卦卦辞</b>；② 一动→读<b>该动爻爻辞</b>；③ 二动→读<b>两动爻爻辞</b>（以上爻为主）；<br>
       ④ 三动→读<b>本卦卦辞（贞）+之卦卦辞（悔）</b>（含初爻＝前十，以本卦为主；不含初爻＝后十，以之卦为主）；<br>
       ⑤ 四动→读<b>之卦中两静爻</b>（以下爻为主）；⑥ 五动→读<b>之卦唯一静爻</b>；⑦ 六合→乾/坤取<b>用九/用六</b>，其余读<b>之卦卦辞</b>。
-    </div>
-
-    <div class="hr"></div>
-    <div class="small muted">
-      小提示：点“复制结果”，可把本次起卦文本粘贴到你的 AI 助手，用来<b>辅助</b>你定位原文与注疏。
     </div>
 
     <div class="hr"></div>
@@ -448,7 +451,7 @@ function buildLinks(targetEl, binArr, sourceLinesForMoving, opts = {}){
   });
   targetEl.appendChild(box);
 
-  // 动爻直达（仅当传入 sourceLinesForMoving 时开启）
+  // 动爻直达（仅在“本卦”使用：传入 sourceLinesForMoving 才会出现）
   if (Array.isArray(sourceLinesForMoving) && sourceLinesForMoving.some(isMoving)){
     const tip=document.createElement("div");
     tip.className="small muted";
@@ -473,7 +476,7 @@ function buildLinks(targetEl, binArr, sourceLinesForMoving, opts = {}){
     targetEl.appendChild(b2);
   }
 
-  // 静爻直达（用于朱熹法四动/五动：读之卦中静爻）
+  // 静爻直达（用于朱熹法四动/五动：读之卦中静爻；仅给“之卦”用）
   if (opts.staticIndices && opts.staticIndices.length){
     const tip=document.createElement("div");
     tip.className="small muted";
@@ -632,6 +635,7 @@ async function finishHex(){
   elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
+  // 四/五动：为之卦提供“静爻直达”
   const movIdx = movingIndices(state.lines); // 1..6
   let staticOnRel = [];
   if (movIdx.length === 4 || movIdx.length === 5){
@@ -641,7 +645,7 @@ async function finishHex(){
   // 本卦：卦级 + 动爻直达
   buildLinks(linksMain, binMain, state.lines);
 
-  // 之卦：卦级 + 静爻直达（不再显示“动爻直达”）
+  // 之卦：卦级 + 静爻直达（不显示“动爻直达”）
   buildLinks(linksRel, binRel, undefined, {
     staticIndices: staticOnRel,
     staticLabel: "静爻直达（之卦）"
@@ -703,7 +707,7 @@ function zhuXiAdvice(lines){
   return { title:"—", read:[], why:"" };
 }
 
-/* ========= 打开解卦面板（结果更易懂） ========= */
+/* ========= 打开解卦面板（更清楚的“要做什么”+ AI 提示紧随其后） ========= */
 function openMethod(){
   if (!state.finished) return;
   const mov = movingIndices(state.lines);
@@ -712,23 +716,32 @@ function openMethod(){
   const sum = zhuXiAdvice(state.lines);
 
   const movTxt = mov.length? ("第 "+mov.join("、")+" 爻"):"（无）";
-  const html = `
+  const stepsHtml = `
+    <div class="small" style="line-height:1.9">
+      <b>你现在要做的事（一步一步）</b><br>
+      1）先确认<b>动爻</b>：${movTxt}<br>
+      2）按照下列清单逐条阅读（先主后辅）：<br>
+      <ol style="margin:6px 0 0 18px">
+        ${sum.read.map(r=>`<li>去读<b>${r.type}</b>：${r.which}　<span class="muted">（所属：${r.hex}）</span></li>`).join("")}
+      </ol>
+      <div class="muted" style="margin-top:6px">为什么这样读：${sum.why || "依朱熹判读规则（见下“规则速记”）"}</div>
+    </div>
+    <div class="ai-tip small">
+      💡 <b>用 AI 快速定位与解读</b>：点“复制结果”，把文本粘贴给你的 AI 助手，并说明“<i>按朱熹法告诉我应该读哪段卦辞/爻辞，给出处与要点；若方便，请结合我的问题给通俗解读（非迷信）</i>”。<br>
+      建议附带：你起卦时心中所问、相关情境与时间。
+    </div>
+  `;
+
+  const headerHtml = `
     <div class="small" style="line-height:1.8">
       <b>当前结果一眼看懂</b><br>
       · 动爻：${movTxt}<br>
       · 本卦：${hexLabel(mainBin)}<br>
       · 之卦：${hexLabel(relBin)}
     </div>
-    <div class="hr"></div>
-    <div class="small" style="line-height:1.9">
-      <b>你该读什么？（朱熹法）</b><br>
-      <span class="muted">理由：${sum.why || "依朱熹判读规则"}</span>
-      <ul style="margin:6px 0 0 18px">
-        ${sum.read.map(r=>`<li><b>${r.type}</b>：${r.which}　<span class="muted">（所属：${r.hex}）</span></li>`).join("")}
-      </ul>
-    </div>
   `;
-  methodSummary.innerHTML = html;
+
+  methodSummary.innerHTML = headerHtml + stepsHtml;
   methodModal.style.display="block";
   setTimeout(()=>methodModal.querySelector(".box").focus(),0);
 }
