@@ -15,19 +15,21 @@
   body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial}
   .wrap{max-width:1100px;margin:0 auto;padding:24px}
   h1{font-size:22px;margin:0 0 8px}
-  /* 原 lead 说明已移除 */
+
   .row{display:grid;gap:16px;grid-template-columns:1fr}
   @media(min-width:980px){.row{grid-template-columns:1.2fr 0.8fr}}
   .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+
   .btn{cursor:pointer;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px}
   .btn.secondary{background:#11111110;color:var(--fg);border:1px solid #00000020}
   .btn.ghost{background:transparent;border:1px dashed #00000030;color:var(--fg)}
   .btn.small{padding:6px 10px;font-size:13px;border-radius:8px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
 
-  /* 新增：突出主打按钮（指南/解卦） */
+  /* 突出主打按钮（指南/解卦） */
   .btn.prominent{padding:12px 16px;border-radius:12px;font-weight:600;box-shadow:0 1px 0 rgba(0,0,0,.08)}
-  .btn.prominent:disabled{opacity:.85} /* 保持显眼的禁用态 */
+  .btn.prominent:disabled{opacity:.65} /* 默认略淡 */
+  #methodBtn:disabled{opacity:.5; filter:saturate(.8)} /* 解卦禁用：再淡一点点 */
 
   .muted{color:var(--muted)} .small{font-size:12px} .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace}
   .grid2{display:grid;gap:12px;grid-template-columns:1fr}
@@ -54,6 +56,7 @@
   }
   a.linkchip{display:inline-block;margin:6px 6px 0 0;padding:5px 9px;border-radius:999px;border:1px solid var(--chip-border);background:#fff;color:#111;text-decoration:none;font-size:12px}
   a.linkchip:hover{box-shadow:0 1px 0 rgba(0,0,0,.08)}
+
   .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
   .modal > .box{max-width:760px;margin:7vh auto;background:#fff;border-radius:12px;padding:16px;outline:none}
   .modal .title{font-weight:600;margin-bottom:8px}
@@ -64,6 +67,7 @@
   .checkbox{display:inline-flex;gap:6px;align-items:center;font-size:12px}
   details.hint{margin-top:12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
   details.hint>summary{cursor:pointer;outline:none}
+
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#0b0b0b; --fg:#eee; --muted:#9ca3af; --card:#111; --line:#e5e7eb; --accent:#e5e7eb;
@@ -85,13 +89,12 @@
 <body>
 <div class="wrap">
   <h1>大衍筮法 · 写实分堆</h1>
-  <!-- 顶部说明文字按你的要求暂时移除 -->
 
   <div class="row">
     <!-- 左：交互 -->
     <div class="card" aria-label="交互与过程">
 
-      <!-- KPI：已淡化（dim） -->
+      <!-- KPI：淡化 -->
       <div class="kpi">
         <div class="pill dim">模式：写实分堆（A 等可能）</div>
         <div class="pill dim">RNG：强随机</div>
@@ -99,15 +102,17 @@
         <div class="pill dim">版本：<span class="mono" id="verpill">—</span></div>
       </div>
 
-      <!-- 控制区：将“指南/解卦（朱熹）”前置并突出 -->
+      <!-- 控制区：指南最前；解卦（朱熹）放到最后 -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px" role="group" aria-label="交互控制">
         <button class="btn prominent" id="guideBtn" aria-haspopup="dialog" aria-controls="guideModal">指南</button>
-        <button class="btn prominent" id="methodBtn" aria-haspopup="dialog" aria-controls="methodModal" disabled>解卦（朱熹）</button>
-        <span style="flex:1"></span>
+
         <button class="btn" id="startHex">开始一卦</button>
         <button class="btn" id="splitOnce" disabled title="每点一次完成一变，三变成一爻">分堆（下一变）</button>
         <button class="btn secondary" id="nextLine" disabled title="本爻完成后开始下一爻">开始下一爻</button>
         <button class="btn secondary" id="resetAll" title="从头再来">重开</button>
+
+        <span style="flex:1"></span>
+        <button class="btn prominent" id="methodBtn" aria-haspopup="dialog" aria-controls="methodModal" disabled>解卦（朱熹）</button>
       </div>
 
       <div id="status" class="muted small">未开始。点击“开始一卦”。</div>
@@ -182,46 +187,60 @@
   </div>
 </div>
 
-<!-- 指南 -->
+<!-- 指南（重写） -->
 <div class="modal" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
   <div class="box" tabindex="-1">
     <div id="guideTitle" class="title">指南 · 一看就会</div>
-    <div class="small"><b>流程：</b>每爻点“分堆（下一变）”共<b>3 次</b>（第1变先挂一），系统据实演算；六爻完成后右侧显示本卦/之卦/互错综及卦名。</div>
     <div class="hr"></div>
-    <ol class="small" style="margin:6px 0 6px 18px; line-height:1.75">
-      <li>点<b>开始一卦</b>。</li>
-      <li>对每一爻连点<b>分堆</b>3次；三变后出现本爻（6/7/8/9）。</li>
-      <li>点<b>开始下一爻</b>直到六爻完成；需要判读点<b>解卦（朱熹）</b>。</li>
-    </ol>
+
+    <div class="small" style="line-height:1.8">
+      <b>本应用怎么用（3 步走）</b><br>
+      ① 点<b>开始一卦</b>。<br>
+      ② 对<b>每一爻</b>连点<b>分堆</b>共 <b>3 次</b>（系统严格按古法推演；第 1 次会“挂一”）。<br>
+      ③ 六爻完成后，右侧显示<b>本卦/之卦</b>、卦名、互/错/综等；需要判读时，点<b>解卦（朱熹）</b>，按提示阅读对应的<b>卦辞/爻辞</b>即可。
+    </div>
+
     <div class="hr"></div>
-    <div class="small"><b>要点：</b>分二必须<b>非空</b>；按四取余，余0记4；动爻=6或9，之卦=把动爻翻转（6→阳、9→阴）。</div>
+
+    <div class="small" style="line-height:1.8">
+      <b>大衍筮法简介（极简版）</b><br>
+      · 用数：以 49 支蓍草起算。<br>
+      · 每一爻要经历<b>三变</b>：<br>
+      &nbsp;&nbsp;— 先<b>分为两堆</b>（左右皆不得为 0）；<br>
+      &nbsp;&nbsp;— 第 1 变先从右堆<b>“挂一”</b>（取走 1）；<br>
+      &nbsp;&nbsp;— 左右堆各<b>按四取余</b>，余数为 1–3 时取走该数，余 0 视为 4；<br>
+      &nbsp;&nbsp;— 三变合计取走 5/9/8/8，剩余数分别对应爻值<b>6/7/8/9</b>；<br>
+      &nbsp;&nbsp;— 六爻自下而上成卦；凡<b>6/9 为动</b>，把动位阴阳反转得到<b>之卦</b>。<br>
+      · 本应用完全在本地模拟上述过程，且支持复制“起卦结果”，方便你外部查注。
+    </div>
+
     <div class="hr"></div>
-    <div style="text-align:right;margin-top:6px">
+    <div style="text-align:right">
       <button class="btn small" id="guideClose">关闭</button>
     </div>
   </div>
 </div>
 
-<!-- 解卦（朱熹）：前十/后十 + 示例演练 -->
+<!-- 解卦（朱熹）：结果更易懂 -->
 <div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodTitle">
   <div class="box" tabindex="-1">
     <div id="methodTitle" class="title">如何解卦 · 朱熹法</div>
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
 
-    <!-- 新增提示：可复制结果到你的 AI 助手 -->
-    <div class="small muted" style="margin-top:6px">
-      小提示：你可以点击“<b>复制结果</b>”，将本次起卦文本粘贴到你的 AI 助手，用来<b>辅助</b>你解卦。
+    <div class="hr"></div>
+    <div class="small muted">
+      规则速记：<br>
+      ① 六爻静→读<b>本卦卦辞</b>；② 一动→读<b>该动爻爻辞</b>；③ 二动→读<b>两动爻爻辞</b>（以上爻为主）；<br>
+      ④ 三动→读<b>本卦卦辞（贞）+之卦卦辞（悔）</b>（含初爻＝前十，以本卦为主；不含初爻＝后十，以之卦为主）；<br>
+      ⑤ 四动→读<b>之卦中两静爻</b>（以下爻为主）；⑥ 五动→读<b>之卦唯一静爻</b>；⑦ 六合→乾/坤取<b>用九/用六</b>，其余读<b>之卦卦辞</b>。
     </div>
 
     <div class="hr"></div>
     <div class="small muted">
-      规则提要（含前十/后十）：<br>
-      ① 六爻静：读<b>本卦卦辞</b>（并参《大象》）；② 一爻动：读<b>本卦该动爻之爻辞</b>；③ 二爻动：读<b>两动爻之爻辞</b>（以上爻为主）；<br>
-      ④ 三爻动：读<b>本卦卦辞（贞）+之卦卦辞（悔）</b>。若三动<b>含初爻</b>为“前十”，以<b>本卦</b>为主；若<b>不含初爻</b>为“后十”，以<b>之卦</b>为主；<br>
-      ⑤ 四爻动：读<b>之卦中两静爻之爻辞</b>（以下爻为主）；⑥ 五爻动：读<b>之卦唯一静爻之爻辞</b>；<br>
-      ⑦ 六爻皆动：本卦为<b>乾/坤</b>时取<b>用九/用六</b>，其余取<b>之卦卦辞</b>。
+      小提示：点“复制结果”，可把本次起卦文本粘贴到你的 AI 助手，用来<b>辅助</b>你定位原文与注疏。
     </div>
+
     <div class="hr"></div>
     <div class="small" id="demoArea">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -230,6 +249,7 @@
       </div>
       <pre id="demoOut" class="mono" style="margin-top:8px"></pre>
     </div>
+
     <div style="text-align:right;margin-top:6px">
       <button class="btn small" id="methodClose">关闭</button>
     </div>
@@ -254,16 +274,7 @@ function cryptoNonceHex(bytes=16){ const u=new Uint8Array(bytes); crypto.getRand
 /* ========= 强随机 RNG ========= */
 function cryptoRng(){ const u32=new Uint32Array(1); return ()=>{ crypto.getRandomValues(u32); return (u32[0]>>>0)/2**32; }; }
 function randIntInclusive(rng,a,b){ const u=rng(); return Math.floor(u*(b-a+1))+a; }
-// 修正版 mulberry32（更稳的位混合）
-function mulberry32(seed){
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6D2B79F5;
-    let r = Math.imul(t ^ (t >>> 15), (t | 1));
-    r ^= r + Math.imul(r ^ (r >>> 7), (r | 61));
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
+function mulberry32(seed){ let t = seed >>> 0; return () => { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), (t | 1)); r ^= r + Math.imul(r ^ (r >>> 7), (r | 61)); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
 function newSeed32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); return (u[0]>>>0)||1; }
 
 /* ========= 写实分堆（严格三变） ========= */
@@ -437,7 +448,7 @@ function buildLinks(targetEl, binArr, sourceLinesForMoving, opts = {}){
   });
   targetEl.appendChild(box);
 
-  // 动爻直达（基于“起卦时”的 6/9）
+  // 动爻直达（仅当传入 sourceLinesForMoving 时开启）
   if (Array.isArray(sourceLinesForMoving) && sourceLinesForMoving.some(isMoving)){
     const tip=document.createElement("div");
     tip.className="small muted";
@@ -472,7 +483,6 @@ function buildLinks(targetEl, binArr, sourceLinesForMoving, opts = {}){
 
     const b3=document.createElement("div");
     opts.staticIndices.forEach(i=>{
-      // 静爻的“六/九”根据当前卡片所示卦（二进制）来确定
       const yao = (bin[i-1]===1) ? "九" : "六";
       const pos = CN_POS[i-1];
       const qq  = encodeURIComponent(`周易 ${name} ${yao}${pos} 爻辞`);
@@ -540,7 +550,6 @@ async function writeClipboard(text){
     document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, ta.value.length);
     let ok=document.execCommand("copy"); document.body.removeChild(ta);
     if(!ok){
-      // 终极兜底：Range + Selection
       const holder=document.createElement("pre"); holder.style.position="fixed"; holder.style.top="-1000px";
       holder.textContent=text; document.body.appendChild(holder);
       const range=document.createRange(); range.selectNodeContents(holder);
@@ -595,7 +604,7 @@ function doOneSplit(){
 
     const idx = state.lines.length;
     elStatus.innerHTML = `第 ${idx} 爻已成：<b>${value}</b>（${(value===7||value===9)?"阳":"阴"}${(value===6||value===9)?"·动":""}）。`;
-    state.curr.done = true; // 保留三变细节
+    state.curr.done = true;
     updateCurrUI();
 
     elSplit.disabled = true;
@@ -623,18 +632,17 @@ async function finishHex(){
   elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
-  // 计算朱熹法需要的“之卦静爻”位置（四动/五动）
-  const movIdx = movingIndices(state.lines); // 本卦的动爻位（1..6，自下而上）
+  const movIdx = movingIndices(state.lines); // 1..6
   let staticOnRel = [];
   if (movIdx.length === 4 || movIdx.length === 5){
     staticOnRel = [1,2,3,4,5,6].filter(i => !movIdx.includes(i));
   }
 
-  // 本卦：卦级别 + 动爻直达
+  // 本卦：卦级 + 动爻直达
   buildLinks(linksMain, binMain, state.lines);
 
-  // 之卦：卦级别 + 动爻直达 + 静爻直达（当需要时）
-  buildLinks(linksRel, binRel, state.lines, {
+  // 之卦：卦级 + 静爻直达（不再显示“动爻直达”）
+  buildLinks(linksRel, binRel, undefined, {
     staticIndices: staticOnRel,
     staticLabel: "静爻直达（之卦）"
   });
@@ -667,52 +675,58 @@ function zhuXiAdvice(lines){
   const mainLbl  = hexLabel(mainBin);
   const relLbl   = hexLabel(relateBin);
 
-  if (m===0) return { title:"六爻皆静：读本卦卦辞", read:[{type:"卦辞", which:"本卦卦辞（并可参《大象》）", hex:mainLbl}], note:"" };
-  if (m===1) return { title:`一爻动：读该动爻爻辞（本卦）`, read:[{type:"爻辞", which:`本卦第 ${mov[0]} 爻的爻辞`, hex:mainLbl}], note:"" };
-  if (m===2){ const hi=Math.max(mov[0],mov[1]); return { title:`二爻动：两爻皆读（以上爻为主）`, read:[{type:"爻辞", which:`本卦第 ${mov[0]}、第 ${mov[1]} 爻（主：第 ${hi} 爻）`, hex:mainLbl}], note:"" }; }
+  if (m===0) return { title:"六爻皆静：读本卦卦辞", read:[{type:"卦辞", which:"本卦卦辞（并可参《大象》）", hex:mainLbl}], why:"没有动爻，需要整体之义" };
+  if (m===1) return { title:`一爻动：读该动爻爻辞（本卦）`, read:[{type:"爻辞", which:`本卦第 ${mov[0]} 爻的爻辞`, hex:mainLbl}], why:"只有一处变化，取其爻辞" };
+  if (m===2){ const hi=Math.max(mov[0],mov[1]); return { title:`二爻动：两爻皆读（以上爻为主）`, read:[{type:"爻辞", which:`本卦第 ${mov[0]}、第 ${mov[1]} 爻（主：第 ${hi} 爻）`, hex:mainLbl}], why:"两处变化，以上爻为主" }; }
   if (m===3){
     const frontTen = mov.includes(1);
     const titleTail = frontTen ? "（前十：以本卦为主）" : "（后十：以之卦为主）";
     const read = frontTen
       ? [{type:"卦辞", which:"本卦卦辞（贞）", hex:mainLbl}, {type:"卦辞", which:"之卦卦辞（悔）", hex:relLbl}]
       : [{type:"卦辞", which:"之卦卦辞（悔）", hex:relLbl}, {type:"卦辞", which:"本卦卦辞（贞）", hex:mainLbl}];
-    return { title:"三爻动："+titleTail, read, note:"含初爻为“前十”；不含初爻为“后十”。" };
+    return { title:"三爻动："+titleTail, read, why: frontTen?"含初爻，偏重本卦":"不含初爻，偏重之卦" };
   }
   if (m===4){
     const stat=[1,2,3,4,5,6].filter(i=>!mov.includes(i)); const main=Math.min(stat[0],stat[1]);
-    return { title:"四爻动：读变卦中两静爻（以下爻为主）", read:[{type:"爻辞", which:`之卦第 ${stat[0]}、第 ${stat[1]} 爻（主：第 ${main} 爻）`, hex:relLbl}], note:"" };
+    return { title:"四爻动：读变卦中两静爻（以下爻为主）", read:[{type:"爻辞", which:`之卦第 ${stat[0]}、第 ${stat[1]} 爻（主：第 ${main} 爻）`, hex:relLbl}], why:"动多静少，取之卦静爻以定义" };
   }
   if (m===5){
     const stat=[1,2,3,4,5,6].find(i=>!mov.includes(i));
-    return { title:"五爻动：读变卦唯一静爻", read:[{type:"爻辞", which:`之卦第 ${stat} 爻`, hex:relLbl}], note:"" };
+    return { title:"五爻动：读变卦唯一静爻", read:[{type:"爻辞", which:`之卦第 ${stat} 爻`, hex:relLbl}], why:"几乎全动，唯静可据" };
   }
   if (m===6){
     const key=mainBin.join("");
-    if(key==="111111") return { title:"六爻皆动（本卦为乾）：用九", read:[{type:"用辞", which:"乾卦『用九』", hex:"1. 乾为天"}], note:"" };
-    if(key==="000000") return { title:"六爻皆动（本卦为坤）：用六", read:[{type:"用辞", which:"坤卦『用六』", hex:"2. 坤为地"}], note:"" };
-    return { title:"六爻皆动：读之卦卦辞", read:[{type:"卦辞", which:"之卦卦辞", hex:relLbl}], note:"" };
+    if(key==="111111") return { title:"六爻皆动（本卦为乾）：用九", read:[{type:"用辞", which:"乾卦『用九』", hex:"1. 乾为天"}], why:"乾特例" };
+    if(key==="000000") return { title:"六爻皆动（本卦为坤）：用六", read:[{type:"用辞", which:"坤卦『用六』", hex:"2. 坤为地"}], why:"坤特例" };
+    return { title:"六爻皆动：读之卦卦辞", read:[{type:"卦辞", which:"之卦卦辞", hex:relLbl}], why:"全变，取之卦之义" };
   }
-  return { title:"—", read:[], note:"" };
+  return { title:"—", read:[], why:"" };
 }
 
-/* ========= 打开解卦面板 & 示例演练 ========= */
+/* ========= 打开解卦面板（结果更易懂） ========= */
 function openMethod(){
   if (!state.finished) return;
   const mov = movingIndices(state.lines);
   const mainBin = toBinary(state.lines);
   const relBin  = toBinary(relatingFrom(state.lines));
   const sum = zhuXiAdvice(state.lines);
+
+  const movTxt = mov.length? ("第 "+mov.join("、")+" 爻"):"（无）";
   const html = `
-    <div class="small">
-      <div><b>本卦：</b>${hexLabel(mainBin)}</div>
-      <div><b>之卦：</b>${hexLabel(relBin)}</div>
-      <div><b>动爻：</b>${mov.length? ("第 "+mov.join("、")+" 爻"):"（无）"}</div>
+    <div class="small" style="line-height:1.8">
+      <b>当前结果一眼看懂</b><br>
+      · 动爻：${movTxt}<br>
+      · 本卦：${hexLabel(mainBin)}<br>
+      · 之卦：${hexLabel(relBin)}
     </div>
     <div class="hr"></div>
-    <div class="small"><b>${sum.title}</b></div>
-    <ul class="small" style="margin:6px 0 0 18px; line-height:1.75">
-      ${sum.read.map(r=>`<li><b>${r.type}</b>：${r.which}　<span class="muted">（所属：${r.hex}）</span></li>`).join("")}
-    </ul>
+    <div class="small" style="line-height:1.9">
+      <b>你该读什么？（朱熹法）</b><br>
+      <span class="muted">理由：${sum.why || "依朱熹判读规则"}</span>
+      <ul style="margin:6px 0 0 18px">
+        ${sum.read.map(r=>`<li><b>${r.type}</b>：${r.which}　<span class="muted">（所属：${r.hex}）</span></li>`).join("")}
+      </ul>
+    </div>
   `;
   methodSummary.innerHTML = html;
   methodModal.style.display="block";
@@ -743,7 +757,7 @@ function renderDemo(){
   let out = "";
   out += `示例六爻（自下而上）：${lines.join(", ")}；动爻：${mov.length? ("第 "+mov.join("、")+" 爻"):"（无）"}\n`;
   out += `本卦：${hexLabel(mainBin)}｜之卦：${hexLabel(relBin)}\n`;
-  out += `${sum.title}\n`;
+  out += `${sum.title}（理由：${sum.why||"规则所指"}）\n`;
   sum.read.forEach(r=>{ out += `· ${r.type}：${r.which}（所属：${r.hex}）\n`; });
   demoOut.textContent = out;
 }
@@ -816,7 +830,7 @@ document.addEventListener("keydown",(e)=>{
 (async function init(){
   await computeBuildHashOnce();
   verpill.textContent = APP_VERSION+" · "+(BUILD_SHA256||"").slice(0,8)+"…";
-  resetAll(); // 不自动弹指南
+  resetAll();
 })();
 </script>
 </body>
