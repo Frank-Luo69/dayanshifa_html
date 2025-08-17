@@ -394,9 +394,18 @@ function renderMore(el,bMain){
 
 /* ========= 外部链接 ========= */
 const CN_POS = ["初","二","三","四","五","上"];
-function buildLinks(targetEl, binArr, linesForYao){
-  const info = hexInfoOf(binArr.join("")); targetEl.innerHTML = ""; if(!info) return;
-  const name = info.zh; const t=document.createElement("div"); t.className="small muted"; t.textContent="查原文 / 注疏（外部）："; targetEl.appendChild(t);
+function buildLinks(targetEl, binArr, sourceLinesForMoving, opts = {}){
+  const bin = Array.isArray(binArr) ? binArr : String(binArr).split("").map(x=>x==="1"?1:0);
+  const info = hexInfoOf(bin.join(""));
+  targetEl.innerHTML = "";
+  if(!info) return;
+
+  const name = info.zh;
+  // 卦级别检索链接
+  const t=document.createElement("div");
+  t.className="small muted";
+  t.textContent="查原文 / 注疏（外部）：";
+  targetEl.appendChild(t);
   const q = encodeURIComponent("周易 "+name);
   const links = [
     { t:"维基(中文)", url:`https://zh.wikipedia.org/w/index.php?search=${q}` },
@@ -406,21 +415,62 @@ function buildLinks(targetEl, binArr, linesForYao){
     { t:"Bing",        url:`https://www.bing.com/search?q=${q}` },
   ];
   const box=document.createElement("div");
-  links.forEach(L=>{ const a=document.createElement("a"); a.className="linkchip"; a.href=L.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=L.t; box.appendChild(a); });
+  links.forEach(L=>{
+    const a=document.createElement("a");
+    a.className="linkchip";
+    a.href=L.url; a.target="_blank"; a.rel="noopener noreferrer";
+    a.textContent=L.t;
+    box.appendChild(a);
+  });
   targetEl.appendChild(box);
 
-  if (Array.isArray(linesForYao) && linesForYao.some(isMoving)){
-    const tip=document.createElement("div"); tip.className="small muted"; tip.style.marginTop="6px"; tip.textContent="动爻直达："; targetEl.appendChild(tip);
+  // 动爻直达（基于“起卦时”的 6/9）
+  if (Array.isArray(sourceLinesForMoving) && sourceLinesForMoving.some(isMoving)){
+    const tip=document.createElement("div");
+    tip.className="small muted";
+    tip.style.marginTop="6px";
+    tip.textContent = opts.movingLabel || "动爻直达：";
+    targetEl.appendChild(tip);
+
     const b2=document.createElement("div");
-    linesForYao.forEach((v,i)=>{
+    sourceLinesForMoving.forEach((v,i)=>{
       if(isMoving(v)){
-        const yao=(v===9)?"九":"六"; const pos=CN_POS[i];
+        const yao=(v===9)?"九":"六";
+        const pos=CN_POS[i];
         const qq=encodeURIComponent(`周易 ${name} ${yao}${pos} 爻辞`);
-        const a=document.createElement("a"); a.className="linkchip"; a.href=`https://www.bing.com/search?q=${qq}`; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=`${yao}${pos}`;
+        const a=document.createElement("a");
+        a.className="linkchip";
+        a.href=`https://www.bing.com/search?q=${qq}`;
+        a.target="_blank"; a.rel="noopener noreferrer";
+        a.textContent=`${yao}${pos}`;
         b2.appendChild(a);
       }
     });
     targetEl.appendChild(b2);
+  }
+
+  // 静爻直达（用于朱熹法四动/五动：读之卦中静爻）
+  if (opts.staticIndices && opts.staticIndices.length){
+    const tip=document.createElement("div");
+    tip.className="small muted";
+    tip.style.marginTop="6px";
+    tip.textContent = opts.staticLabel || "静爻直达：";
+    targetEl.appendChild(tip);
+
+    const b3=document.createElement("div");
+    opts.staticIndices.forEach(i=>{
+      // 静爻的“六/九”根据当前卡片所示卦（二进制）来确定
+      const yao = (bin[i-1]===1) ? "九" : "六";
+      const pos = CN_POS[i-1];
+      const qq  = encodeURIComponent(`周易 ${name} ${yao}${pos} 爻辞`);
+      const a   = document.createElement("a");
+      a.className="linkchip";
+      a.href=`https://www.bing.com/search?q=${qq}`;
+      a.target="_blank"; a.rel="noopener noreferrer";
+      a.textContent = `${yao}${pos}`;
+      b3.appendChild(a);
+    });
+    targetEl.appendChild(b3);
   }
 }
 
@@ -560,8 +610,21 @@ async function finishHex(){
   elLabelMain.textContent = `本卦：` + hexLabel(binMain);
   elLabelRel.textContent  = `之卦：` + hexLabel(binRel);
 
+  // 计算朱熹法需要的“之卦静爻”位置（四动/五动）
+  const movIdx = movingIndices(state.lines); // 本卦的动爻位（1..6，自下而上）
+  let staticOnRel = [];
+  if (movIdx.length === 4 || movIdx.length === 5){
+    staticOnRel = [1,2,3,4,5,6].filter(i => !movIdx.includes(i));
+  }
+
+  // 本卦：卦级别 + 动爻直达
   buildLinks(linksMain, binMain, state.lines);
-  buildLinks(linksRel, binRel, state.lines);
+
+  // 之卦：卦级别 + 动爻直达 + 静爻直达（当需要时）
+  buildLinks(linksRel, binRel, state.lines, {
+    staticIndices: staticOnRel,
+    staticLabel: "静爻直达（之卦）"
+  });
 
   const bNuc = nuclearFromBinary(binMain);
   const bOpp = oppositeFromBinary(binMain);
