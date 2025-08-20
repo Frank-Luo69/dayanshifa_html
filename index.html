@@ -109,7 +109,7 @@
 
         <button class="btn" id="startHex">开始一卦</button>
         <button class="btn" id="splitOnce" disabled title="每点一次完成一变，三变成一爻">分堆（下一变）</button>
-        <button class="btn secondary" id="nextLine" disabled title="本爻完成后开始下一爻">开始下一爻</button>
+  <button class="btn" id="nextLine" disabled title="本爻完成后开始下一爻">开始下一爻</button>
         <button class="btn secondary" id="resetAll" title="从头再来">重开</button>
 
         <span style="flex:1"></span>
@@ -211,8 +211,15 @@
     <div class="hr"></div>
     <div id="methodSummary" class="small"></div>
     <div class="hr"></div>
-    <div class="small muted">
-      规则速记：① 六爻静读卦辞；② 一动读动爻；③ 二动两爻（以上爻为主）；④ 三动前十/后十；⑤ 四动读之卦两静爻；⑥ 五动读之卦唯一静爻；⑦ 六合（乾/坤）用九/用六，余读之卦卦辞。
+    <div class="small muted" style="line-height:1.8">
+      读法简明版：
+      <br>1）无动爻（全静）：读本卦卦辞。
+      <br>2）一动：读本卦该动爻的爻辞。
+      <br>3）二动：两爻爻辞都读，以“上爻”为主（倾向先读、重读上位）。
+      <br>4）三动：读本卦“前十/后十”（按朱熹法的三动处理）。
+      <br>5）四动：改读“之卦”的两处静爻爻辞。
+      <br>6）五动：改读“之卦”的唯一静爻爻辞。
+      <br>7）六动：乾卦用九、坤卦用六；其余情况读“之卦”卦辞。
     </div>
     <div style="text-align:right;margin-top:6px">
       <button class="btn small" id="methodClose">关闭</button>
