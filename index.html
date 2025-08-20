@@ -97,7 +97,7 @@
 
       <!-- KPI：淡化 -->
       <div class="kpi">
-        <div class="pill dim">模式：写实分堆（模4均匀）</div>
+  <div class="pill dim">模式：严格写实分堆（A∈[1..n-1] 等概率）</div>
         <div class="pill dim">RNG：强随机</div>
         <div class="pill dim">VRS：<span class="mono" id="vrs">—</span></div>
         <div class="pill dim">版本：<span class="mono" id="verpill">—</span></div>
@@ -244,18 +244,11 @@ function newSeed32(){ const u=new Uint32Array(1); crypto.getRandomValues(u); ret
 /* ========= 工具 ========= */
 function rem4NonZero(x){ const r=x%4; return r===0?4:r; }
 
-/* ========= 关键改动 #1：模4均匀切分 =========
-   先在 {0,1,2,3} 上等概率抽取 A 的模4余数 r，
-   再在 [1, total-1] 区间里挑选满足 A≡r(mod4) 的 A（等概率），B=total-A。
-   ——这保持“分二”的写实性，同时把随机性落实在真正起作用的模4层。 */
+/* ========= 关键改动 #1：严格写实分堆 =========
+   真实操作是把 n 根蓍草随机分为左右两堆，A∈[1..n-1] 的每个取值等概率；
+   不对 A 的模4余数做任何“均匀化”处理，以还原物理写实。 */
 function splitNonZero(total, rng){
-  const r = Math.floor(rng()*4);                // 0..3
-  const start = (r===0 ? 4 : r);                 // 最小正整数且同余 r
-  const Avals = [];
-  for(let a=start; a<=total-1; a+=4){ Avals.push(a); }
-  // 理论上 total≥24，总能取到；保险起见做个兜底
-  const A = Avals.length ? Avals[Math.floor(rng()*Avals.length)]
-                         : randIntInclusive(rng,1,total-1);
+  const A = randIntInclusive(rng, 1, total - 1); // A∈[1..total-1] 等概率
   return [A, total - A];
 }
 
@@ -359,6 +352,92 @@ function hexLabel(bin){
   return `${info.no}. ${full}「${short}」`;
 }
 
+/* ========= 朱熹法 · 自动摘要 ========= */
+function buildMethodSummary(lines, binMain, binRel){
+  const nameMain = hexLabel(binMain);
+  const nameRel  = hexLabel(binRel);
+  const moving = lines.map((v,i)=> (v===6||v===9)? i+1 : 0).filter(Boolean);
+  const count = moving.length;
+  const posCN = ["初","二","三","四","五","上"];
+  const movTxt = count ? moving.map(i=> posCN[i-1] + ((lines[i-1]===9)?"九":"六")).join("、") : "无";
+  if (count===0) return `动爻数：0。按朱熹法：读本卦卦辞（${nameMain}）。`;
+  if (count===1){ const i=moving[0]; const yao=(lines[i-1]===9)?"九":"六"; return `动爻数：1（${yao}${posCN[i-1]}）。按朱熹法：读本卦该动爻爻辞。`; }
+  if (count===2){ const hi=Math.max(...moving); const yaoHi=(lines[hi-1]===9)?"九":"六"; return `动爻数：2（${movTxt}）。按朱熹法：两爻并读（以上爻为主：${yaoHi}${posCN[hi-1]}）。`; }
+  if (count===3) return `动爻数：3（${movTxt}）。按朱熹法：读本卦“前十/后十”。`;
+  if (count===4){ const stat=[1,2,3,4,5,6].filter(i=>!moving.includes(i)).map(i=>posCN[i-1]).join("、"); return `动爻数：4（${movTxt}）。按朱熹法：读之卦两静爻（${stat}）。之卦：${nameRel}。`; }
+  if (count===5){ const s=[1,2,3,4,5,6].find(i=>!moving.includes(i)); return `动爻数：5（${movTxt}）。按朱熹法：读之卦唯一静爻（${posCN[s-1]}）。之卦：${nameRel}。`; }
+  const key = binMain.join(""), isQian=(key==="111111"), isKun=(key==="000000");
+  if (isQian) return `动爻数：6。按朱熹法：乾卦用九。`;
+  if (isKun)  return `动爻数：6。按朱熹法：坤卦用六。`;
+  return `动爻数：6。按朱熹法：读之卦卦辞（${nameRel}）。`;
+}
+
+/* ========= 摘要 · 动态链接到爻辞搜索 ========= */
+function hexNameOf(bin){ const k=Array.isArray(bin)?bin.join(""):String(bin); const info=HEX64[k]; return info ? info.zh : ""; }
+function appendMethodLinks(container, lines, binMain, binRel){
+  // 清理旧的链接容器
+  const old = container.querySelector('.summary-links');
+  if (old) old.remove();
+
+  const movingIdx = lines.map((v,i)=> (v===6||v===9)? i+1 : 0).filter(Boolean);
+  const count = movingIdx.length;
+  if (count===0) return; // 无需爻辞链接
+
+  const nameMain = hexNameOf(binMain);
+  const nameRel  = hexNameOf(binRel);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'summary-links';
+  wrap.style.marginTop = '8px';
+
+  // 主：动爻直达
+  const tip1 = document.createElement('div');
+  tip1.className = 'small muted';
+  tip1.textContent = '动爻直达：';
+  wrap.appendChild(tip1);
+
+  const chips1 = document.createElement('div');
+  movingIdx.forEach(i=>{
+    const yao = (lines[i-1]===9)?'九':'六';
+    const pos = CN_POS[i-1];
+    const q = encodeURIComponent(`周易 ${nameMain} ${yao}${pos} 爻辞`);
+    const a = document.createElement('a');
+    a.className = 'linkchip';
+    a.target = '_blank'; a.rel='noopener noreferrer';
+    a.href = `https://www.bing.com/search?q=${q}`;
+    a.textContent = `${yao}${pos}`;
+    chips1.appendChild(a);
+  });
+  wrap.appendChild(chips1);
+
+  // 在 4/5 动爻时，之卦静爻直达
+  if (count===4 || count===5){
+    const staticIdx = [1,2,3,4,5,6].filter(i=>!movingIdx.includes(i));
+    if (staticIdx.length){
+      const tip2 = document.createElement('div');
+      tip2.className = 'small muted';
+      tip2.style.marginTop = '6px';
+      tip2.textContent = '之卦静爻直达：';
+      wrap.appendChild(tip2);
+
+      const chips2 = document.createElement('div');
+      staticIdx.forEach(i=>{
+        const yao = (binRel[i-1]===1)?'九':'六';
+        const pos = CN_POS[i-1];
+        const q = encodeURIComponent(`周易 ${nameRel} ${yao}${pos} 爻辞`);
+        const a = document.createElement('a');
+        a.className='linkchip'; a.target='_blank'; a.rel='noopener noreferrer';
+        a.href=`https://www.bing.com/search?q=${q}`;
+        a.textContent = `${yao}${pos}`;
+        chips2.appendChild(a);
+      });
+      wrap.appendChild(chips2);
+    }
+  }
+
+  container.appendChild(wrap);
+}
+
 /* ========= UI refs ========= */
 const $ = s=>document.querySelector(s);
 const elStart=$("#startHex"), elSplit=$("#splitOnce"), elNextLine=$("#nextLine"), elReset=$("#resetAll");
@@ -397,9 +476,8 @@ function renderBuilt(lines){
   lines.forEach(v=> elBuilt.appendChild(renderOneLineVisual(v)));
   elBuiltText.textContent = `（已成 ${lines.length}/6 爻；从下而上：${lines.join(", ")}）`;
 }
-function trisOfBin(bin){ const lower=bin.slice(0,3), upper=bin.slice(3,6); return {lower,upper}; }
 function renderTris(el, bin){
-  const {lower,upper}=trisOfBin(bin);
+  const {lower,upper}=trisOf(bin);
   el.textContent=`下卦：${triNameOf(lower)}　上卦：${triNameOf(upper)}　（二进制 底→顶：${bin.join("")})`;
 }
 function renderMore(el,bMain){
@@ -496,8 +574,8 @@ function buildExportText(includeDetails){
   const binRel = toBinary(relating);
   const mainLbl = hexLabel(mainBin);
   const relLbl  = hexLabel(binRel);
-  const {lower:lm, upper:um} = trisOfBin(mainBin);
-  const {lower:lr, upper:ur} = trisOfBin(binRel);
+  const {lower:lm, upper:um} = trisOf(mainBin);
+  const {lower:lr, upper:ur} = trisOf(binRel);
   const movIdx = state.lines.map((v,i)=> (v===6||v===9)? i+1 : null).filter(Boolean);
   const movTxt = movIdx.length? ("第 "+movIdx.join("、")+" 爻") : "（无）";
 
@@ -511,6 +589,15 @@ function buildExportText(includeDetails){
   s += `互卦：${hexLabel(bNuc)}｜错卦：${hexLabel(bOpp)}｜综卦：${hexLabel(bInv)}\n`;
   s += `——\n`;
   s += `六爻（自下而上）：${state.lines.join(", ")}；动爻：${movTxt}\n`;
+  if (includeDetails){
+    s += `——\n三变明细（每爻分堆过程）:\n`;
+    try{
+      s += JSON.stringify(state.hexDetail, null, 2) + "\n";
+    }catch(_){
+      // 兜底：简单拼接
+      s += state.hexDetail.map(d=>`第${d.line}爻 value=${d.value} remainder=${d.remainder}`).join("\n")+"\n";
+    }
+  }
   return s;
 }
 
@@ -611,6 +698,11 @@ async function finishHex(){
 
   methodBtn.disabled = false;
   copyBtn.disabled = false;
+  // 自动生成朱熹法摘要 + 动态链接
+  try{
+    methodSummary.textContent = buildMethodSummary(state.lines, binMain, binRel);
+    appendMethodLinks(methodSummary, state.lines, binMain, binRel);
+  }catch(_){ /* noop */ }
   elStatus.innerHTML = `<span class="ok">全卦完成。</span> 可点<b>解卦（朱熹）</b>查看判读路径，或<b>复制结果</b>保存/分享。`;
 }
 
@@ -628,6 +720,18 @@ document.getElementById("selftest").addEventListener("click", ()=>{
     `参考基准：{6:≈6.25%, 7:≈31.25%, 8:≈43.75%, 9:≈18.75%}`;
   const trendOK=(cnt[8]>=cnt[7])&&(cnt[7]>=cnt[9])&&(cnt[9]>=cnt[6]); // 8 ≥ 7 ≥ 9 ≥ 6
   elStat.textContent += `\n趋势检查：${ trendOK ? "近似符合（8 ≥ 7 ≥ 9 ≥ 6）" : "偏离较大（建议增大样本或检查实现）" }`;
+  // 卡方显著性检验（df=3，阈值 p=0.05→7.815, p=0.01→11.345）
+  (function(){
+    const n6=cnt[6]||0, n7=cnt[7]||0, n8=cnt[8]||0, n9=cnt[9]||0;
+    const NN=n6+n7+n8+n9; if(!NN){ return; }
+    const p={6:1/16,7:5/16,8:7/16,9:3/16};
+    const e6=NN*p[6], e7=NN*p[7], e8=NN*p[8], e9=NN*p[9];
+    const chi2 = ((n6-e6)**2)/e6 + ((n7-e7)**2)/e7 + ((n8-e8)**2)/e8 + ((n9-e9)**2)/e9;
+    const p05=7.815, p01=11.345;
+    let verdict = chi2<p05 ? "通过（p>0.05）" : (chi2<p01 ? "边界/可疑（0.01<p≤0.05）" : "显著偏离（p≤0.01）");
+    elStat.textContent += `\n卡方检验：χ²=${chi2.toFixed(3)}（df=3），阈值 p=0.05→${p05}, p=0.01→${p01}`;
+    elStat.textContent += `\n显著性结论：${verdict}`;
+  })();
   document.getElementById("check").style.display="block";
   elWarn.textContent = (N<50000) ? "提示：样本量较小，波动较大；建议 ≥ 100000。" : "";
 });
@@ -656,6 +760,34 @@ document.addEventListener("keydown",(e)=>{ if(methodModalEl.style.display==="blo
   document.getElementById("verpill").textContent = APP_VERSION+" · "+(BUILD_SHA256||"").slice(0,8)+"…";
   resetAll();
 })();
+
+/* ========= 复制结果 ========= */
+async function copyTextToClipboard(text){
+  // 优先使用异步剪贴板（需安全上下文），否则回退到 textarea+execCommand
+  try{
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(_){ /* fallback below */ }
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=text; ta.style.position="fixed"; ta.style.left="-9999px"; ta.setAttribute("readonly","readonly");
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    const ok=document.execCommand("copy"); document.body.removeChild(ta); return ok;
+  }catch(_){ return false; }
+}
+
+copyBtn.addEventListener("click", async ()=>{
+  if (!state.finished){ return; }
+  const wantDetail = !!includeSteps?.checked;
+  const text = buildExportText(wantDetail);
+  const prev = copyBtn.textContent;
+  copyBtn.disabled = true;
+  const ok = await copyTextToClipboard(text);
+  copyBtn.textContent = ok ? "已复制" : "复制失败";
+  setTimeout(()=>{ copyBtn.textContent = prev; copyBtn.disabled = false; }, 1200);
+});
 </script>
 </body>
 </html>
